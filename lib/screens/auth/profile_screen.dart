@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -7,138 +8,190 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
     final theme = Theme.of(context);
-    final authProvider = Provider.of<AuthProvider>(context);
-    final color = theme.colorScheme;
+    final user = auth.userProfile;
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text('Mi Perfil', style: theme.textTheme.titleLarge),
-        backgroundColor: color.surface,
-        centerTitle: true,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text('Profile'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            onPressed: () async {
+              await auth.signOut();
+              context.goNamed('login');
+            },
+          )
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile Image
-            if (authProvider.profileImage != null)
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: color.primary, width: 3),
-                ),
-                child: ClipOval(
-                  child: Image.network(
-                    authProvider.profileImage!,
-                    fit: BoxFit.cover,
+            GestureDetector(
+              onTap: () {},
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: user?.profileImageUrl != null
+                        ? NetworkImage(user!.profileImageUrl!)
+                        : null,
+                    child: user?.profileImageUrl == null
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
                   ),
-                ),
-              ),
-            const SizedBox(height: 16),
-
-            // Name
-            Text(
-              authProvider.name ?? 'Nombre no definido',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: theme.colorScheme.primary,
+                    child: const Icon(Icons.camera_alt,
+                        size: 16, color: Colors.white),
+                  )
+                ],
               ),
             ),
             const SizedBox(height: 8),
-
-            // Email
-            Text(
-              authProvider.email ?? 'Email no definido',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-              ),
-            ),
+            const Text('Tap to update profile photo'),
             const SizedBox(height: 24),
-
-            Divider(color: color.outline.withOpacity(0.3)),
+            _sectionCard(
+              context,
+              title: 'Personal Information',
+              items: [
+                _infoTile('Name', user?.name ?? ''),
+                _infoTile('Email', user?.email ?? ''),
+                _infoTile('Phone', user?.phone ?? 'Not provided'),
+                _infoTile('Age', user?.age?.toString() ?? ''),
+              ],
+            ),
             const SizedBox(height: 16),
-
-            // Age, Height, Weight
-            _buildDataTile(
-                context, 'Edad', '${authProvider.name ?? '--'} años'),
-            _buildDataTile(
-                context,
-                'Estatura',
-                authProvider.height != null
-                    ? '${authProvider.height!.toStringAsFixed(0)} ${authProvider.heightUnit}'
-                    : '--'),
-            _buildDataTile(
-                context,
-                'Peso',
-                authProvider.height != null
-                    ? '${authProvider.height!.toStringAsFixed(1)} ${authProvider.heightUnit}'
-                    : '--'),
-
+            _sectionCard(
+              context,
+              title: 'Physical Information',
+              items: [
+                _infoTile('Weight (${user?.weightUnit ?? 'kg'})',
+                    user?.weight?.toString() ?? ''),
+                _infoTile('Height (${user?.heightUnit ?? 'cm'})',
+                    user?.height?.toString() ?? ''),
+                _infoTile(
+                    'Injuries',
+                    user?.injuries.isEmpty ?? true
+                        ? 'None'
+                        : user!.injuries.join(', ')),
+              ],
+            ),
             const SizedBox(height: 16),
-
-            Divider(color: color.outline.withOpacity(0.3)),
+            _sectionCard(
+              context,
+              title: 'Fitness Goals',
+              items: [
+                _infoTile('Training Goal', user?.fitnessGoal ?? ''),
+                _infoTile(
+                    'Diet Preferences', user?.dietaryHabits.join(', ') ?? ''),
+              ],
+            ),
             const SizedBox(height: 16),
-
-            // Injuries
-            _buildDataTile(
-                context,
-                'Lesiones',
-                (authProvider.injuries?.isEmpty ?? true)
-                    ? 'Ninguna'
-                    : authProvider.injuries!.join(', ')),
-
-            // Training Frequency & Goal
-            _buildDataTile(context, 'Frecuencia de Entrenamiento',
-                authProvider.trainingFrequency ?? '--'),
-            _buildDataTile(
-                context, 'Objetivo', authProvider.fitnessGoal ?? '--'),
-
-            const SizedBox(height: 16),
-            Divider(color: color.outline.withOpacity(0.3)),
-            const SizedBox(height: 16),
-
-            // Diet
-            _buildDataTile(
-                context,
-                'Hábitos Alimenticios',
-                (authProvider.dietaryHabits?.isEmpty ?? true)
-                    ? 'Ninguno'
-                    : authProvider.dietaryHabits!.join(', ')),
+            _sectionCard(
+              context,
+              title: 'Progress Photo',
+              child: Container(
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: theme.colorScheme.background,
+                ),
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      const Icon(Icons.image_outlined, size: 60),
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundColor: theme.colorScheme.primary,
+                          child: const Icon(Icons.camera_alt,
+                              size: 16, color: Colors.white),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              items: [
+                _infoTile('Date', user?.progressPhotoDate ?? 'Not provided'),
+                _infoTile('Description',
+                    user?.progressPhotoDescription ?? 'No description'),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDataTile(BuildContext context, String label, String value) {
+  Widget _sectionCard(
+    BuildContext context, {
+    required String title,
+    required List<Widget> items,
+    Widget? child,
+  }) {
     final theme = Theme.of(context);
-    final color = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$label:',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.textTheme.bodyLarge,
-            ),
-          ),
+          Text(title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+              )),
+          const SizedBox(height: 16),
+          if (child != null) child else ...items,
         ],
       ),
+    );
+  }
+
+  Widget _infoTile(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: TextEditingController(text: value),
+          readOnly: true,
+          decoration: InputDecoration(
+            suffixIcon: const Icon(Icons.edit, size: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Colors.white10,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 }

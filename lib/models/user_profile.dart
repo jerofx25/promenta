@@ -96,4 +96,10 @@ class UserProfile {
       profileImageUrl: json['profileImageUrl'],
     );
   }
+
+  get progressPhotoDate => null;
+
+  get progressPhotoDescription => null;
+
+  get phone => null;
 }
