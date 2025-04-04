@@ -1,0 +1,321 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/constants.dart';
+import '../../widgets/custom_button.dart';
+
+class InjuriesScreen extends StatefulWidget {
+  const InjuriesScreen({Key? key}) : super(key: key);
+
+  @override
+  State<InjuriesScreen> createState() => _InjuriesScreenState();
+}
+
+class _InjuriesScreenState extends State<InjuriesScreen>
+    with SingleTickerProviderStateMixin {
+  final Set<String> _selectedInjuries = {};
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    // Start animation after frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleInjury(String injury) {
+    setState(() {
+      if (_selectedInjuries.contains(injury)) {
+        _selectedInjuries.remove(injury);
+      } else {
+        _selectedInjuries.add(injury);
+      }
+    });
+  }
+
+  void _handleContinue() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // If "No injuries" is selected, clear any other selections
+    if (_selectedInjuries.contains('Ninguna lesión')) {
+      _selectedInjuries.clear();
+      _selectedInjuries.add('Ninguna lesión');
+    }
+    authProvider.setInjuries(_selectedInjuries.toList());
+    authProvider.nextOnboardingStep();
+  }
+
+  void _handleBack() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.previousOnboardingStep();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background image with gradient overlay
+          Positioned.fill(
+            child: Image.network(
+              "https://pixabay.com/get/gee5fd118df2e121a9c8ba4d5732882d340bf164b33040a2fe4d11dee9d1cb75e306fcee90957906c04a95def34cd42603101f91e37918c32216dc124c1caa794_1280.jpg",
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.4),
+                    Colors.black.withOpacity(0.7),
+                    Colors.black.withOpacity(0.9),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Progress indicator
+                  Consumer<AuthProvider>(builder: (context, authProvider, _) {
+                    return LinearProgressIndicator(
+                      value: (authProvider.onboardingStep + 1) /
+                          authProvider.totalOnboardingSteps,
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(10),
+                      minHeight: 8,
+                    )
+                        .animate(controller: _animationController)
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: -0.1, end: 0);
+                  }),
+
+                  // Back button
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: _handleBack,
+                      icon: Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black38,
+                        padding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  )
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 400.ms)
+                      .slideX(begin: -0.2, end: 0),
+
+                  SizedBox(height: size.height * 0.02),
+
+                  // Title
+                  Text(
+                    '¿Tienes alguna lesion?',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  )
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 500.ms, delay: 100.ms)
+                      .slideY(begin: 0.2, end: 0),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Selecciona las lesiones o condiciones que debemos tener en cuenta',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  )
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 500.ms, delay: 200.ms)
+                      .slideY(begin: 0.2, end: 0),
+
+                  SizedBox(height: size.height * 0.03),
+
+                  // Injuries list
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: OnboardingConstants.commonInjuries.length,
+                    itemBuilder: (context, index) {
+                      final injury = OnboardingConstants.commonInjuries[index];
+                      final isSelected = _selectedInjuries.contains(injury);
+                      final isNoInjuries = injury == 'Ninguna lesión';
+
+                      // If "No injuries" is selected, disable all other options
+                      final isDisabled = isNoInjuries
+                          ? false
+                          : _selectedInjuries.contains('Ninguna lesión');
+
+                      return _buildInjuryItem(
+                        injury,
+                        isSelected,
+                        isDisabled,
+                        index,
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: size.height * 0.04),
+
+                  // Continue button
+                  CustomButton(
+                    text: 'Continuar',
+                    onPressed: _handleContinue,
+                    width: double.infinity,
+                  )
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 600.ms, delay: 600.ms)
+                      .slideY(begin: 0.3, end: 0),
+
+                  const SizedBox(height: 16),
+
+                  // Skip button
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        final authProvider =
+                            Provider.of<AuthProvider>(context, listen: false);
+                        authProvider.skipOnboarding();
+                      },
+                      child: Text(
+                        'Omitir',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.7),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  )
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 600.ms, delay: 700.ms),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInjuryItem(
+      String injury, bool isSelected, bool isDisabled, int index) {
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isDisabled ? null : () => _toggleInjury(injury),
+          borderRadius: BorderRadius.circular(16),
+          child: Opacity(
+            opacity: isDisabled ? 0.5 : 1.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    : Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Checkbox
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : Colors.white.withOpacity(0.6),
+                        width: 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Injury name
+                  Expanded(
+                    child: Text(
+                      injury,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : Colors.white,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+
+                  // Icon for "No injuries"
+                  if (injury == 'Ninguna lesión')
+                    Icon(
+                      Icons.thumb_up,
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : Colors.white.withOpacity(0.6),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+        .animate(controller: _animationController)
+        .fadeIn(duration: 500.ms, delay: 300.ms + (index * 50).ms)
+        .slideY(begin: 0.2, end: 0);
+  }
+}
