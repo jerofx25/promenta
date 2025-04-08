@@ -6,6 +6,7 @@ import '../utils/theme.dart';
 import '../widgets/progress_pie_chart.dart';
 import '../widgets/stacked_column_chart.dart';
 import '../widgets/radar_chart.dart';
+import 'package:draggable_fab/draggable_fab.dart';
 
 class FitnessTrackerScreen extends StatefulWidget {
   const FitnessTrackerScreen({Key? key}) : super(key: key);
@@ -19,6 +20,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
   late ScrollController _scrollController;
+  bool _isExpanded = false;
 
   // Activity rings data
   final int _currentSteps = 8547;
@@ -65,15 +67,13 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     super.initState();
     _scrollController = ScrollController();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
     _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-
-    _animationController.forward();
   }
 
   @override
@@ -126,6 +126,63 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
           ),
         ),
       ),
+      floatingActionButton: DraggableFab(
+        initPosition: const Offset(50, 50),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FloatingActionButton(
+              heroTag: 'main',
+              backgroundColor: theme.colorScheme.primary,
+              child: AnimatedIcon(
+                icon: AnimatedIcons.menu_close,
+                progress: _animationController,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isExpanded = !_isExpanded;
+                  if (_isExpanded) {
+                    _animationController.forward();
+                  } else {
+                    _animationController.reverse();
+                  }
+                });
+              },
+            ),
+            _buildAnimatedButton(
+              index: 0,
+              child: FloatingActionButton(
+                heroTag: 'profile',
+                backgroundColor: theme.colorScheme.primary,
+                child: const Icon(Icons.person),
+                onPressed: () => context.goNamed('profile'),
+              ),
+            ),
+            _buildAnimatedButton(
+              index: 1,
+              child: FloatingActionButton(
+                heroTag: 'settings',
+                backgroundColor: theme.colorScheme.primary,
+                child: const Icon(Icons.settings),
+                onPressed: () {
+                  // Implementar navegación a configuración
+                },
+              ),
+            ),
+            _buildAnimatedButton(
+              index: 2,
+              child: FloatingActionButton(
+                heroTag: 'notifications',
+                backgroundColor: theme.colorScheme.primary,
+                child: const Icon(Icons.notifications),
+                onPressed: () {
+                  // Implementar navegación a notificaciones
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -153,22 +210,6 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
               ),
             ],
           ),
-        ),
-        // IconButton que navega a la pantalla de perfil
-        IconButton(
-          icon: CircleAvatar(
-            radius: 24,
-            backgroundColor: theme.colorScheme.surface,
-            child: Icon(
-              Icons.person,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          onPressed: () {
-            // Se crea una instancia dummy de UserProfile para mostrar
-
-            context.goNamed('profile');
-          },
         ),
       ],
     );
@@ -1096,6 +1137,33 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedButton({
+    required Widget child,
+    required int index,
+  }) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 1200),
+      opacity: _isExpanded ? 1.0 : 0.0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 1500),
+        curve: Curves.easeOutBack,
+        transform: Matrix4.translationValues(
+          0,
+          _isExpanded ? (index + 1) * 18.0 : 0,
+          0,
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 1500),
+          margin: EdgeInsets.only(
+            top: _isExpanded ? 10 : 0,
+            bottom: _isExpanded ? 8 : 0,
+          ),
+          child: _isExpanded ? child : const SizedBox(),
+        ),
       ),
     );
   }
