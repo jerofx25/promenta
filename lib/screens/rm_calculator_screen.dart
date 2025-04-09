@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import '../providers/exercise_provider.dart';
 import '../models/exercise.dart';
 import '../utils/theme.dart';
-
 
 class RMCalculatorScreen extends StatefulWidget {
   const RMCalculatorScreen({Key? key}) : super(key: key);
@@ -13,17 +13,19 @@ class RMCalculatorScreen extends StatefulWidget {
   _RMCalculatorScreenState createState() => _RMCalculatorScreenState();
 }
 
-class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTickerProviderStateMixin {
+class _RMCalculatorScreenState extends State<RMCalculatorScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _exerciseNameController = TextEditingController();
   final TextEditingController _maxWeightController = TextEditingController();
-  
+
   late AnimationController _animationController;
   late Animation<double> _animation;
-  
-  String _filterType = 'date_desc'; // Options: date_asc, date_desc, growth_asc, growth_desc
+
+  String _filterType =
+      'date_desc'; // Options: date_asc, date_desc, growth_asc, growth_desc
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
   DateTime _endDate = DateTime.now();
-  
+
   @override
   void initState() {
     super.initState();
@@ -31,26 +33,26 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    
+
     _animation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    
+
     _animationController.forward();
-    
+
     // Initialize with the current selected exercise if available
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<ExerciseProvider>(context, listen: false);
       final selectedExercise = provider.selectedExercise;
-      
+
       if (selectedExercise != null) {
         _exerciseNameController.text = selectedExercise.name;
         _maxWeightController.text = selectedExercise.maxWeight.toString();
       }
     });
   }
-  
+
   @override
   void dispose() {
     _exerciseNameController.dispose();
@@ -62,7 +64,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
   void _showAddExerciseDialog() {
     final nameController = TextEditingController();
     final weightController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -111,32 +113,36 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
               // Validate and add the exercise
               final name = nameController.text.trim();
               final weightText = weightController.text.trim();
-              
+
               if (name.isEmpty || weightText.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Por favor completa todos los campos')),
+                  const SnackBar(
+                      content: Text('Por favor completa todos los campos')),
                 );
                 return;
               }
-              
+
               try {
                 final weight = double.parse(weightText);
                 Provider.of<ExerciseProvider>(context, listen: false)
                     .addExercise(name, weight);
                 Navigator.pop(context);
-                
+
                 // Update the text controllers with the new exercise
                 _exerciseNameController.text = name;
                 _maxWeightController.text = weight.toString();
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Por favor ingresa un número válido para el peso')),
+                  const SnackBar(
+                      content: Text(
+                          'Por favor ingresa un número válido para el peso')),
                 );
               }
             },
@@ -146,7 +152,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   void _showDateRangeDialog() {
     showDateRangePicker(
       context: context,
@@ -217,21 +223,23 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: theme.colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                     ),
                   ),
                 ],
               ),
             );
           }
-          
+
           final progressData = provider.getProgressForExercise(
             selectedExercise.id,
             ascending: _filterType.contains('asc'),
           );
-          
-          final percentages = provider.calculateRMPercentages(selectedExercise.maxWeight);
-          
+
+          final percentages =
+              provider.calculateRMPercentages(selectedExercise.maxWeight);
+
           return Stack(
             children: [
               // Background image
@@ -255,19 +263,19 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
                       children: [
                         // Exercise Selection Dropdown
                         _buildExerciseSelector(provider),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Current RM Info
                         _buildCurrentRMInfo(selectedExercise),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Progress Chart
                         _buildProgressChart(progressData),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Percentages Table
                         _buildPercentagesTable(percentages),
                       ],
@@ -279,20 +287,26 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddExerciseDialog,
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60.0),
+        child: FloatingActionButton(
+          onPressed: _showAddExerciseDialog,
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
-  
+
   Widget _buildExerciseSelector(ExerciseProvider provider) {
     final theme = Theme.of(context);
     final exercises = provider.exercises;
     final selectedExercise = provider.selectedExercise;
-    
+
+    // Creamos una lista de etiquetas para el dropdown
+    final List<String> exerciseNames = exercises.map((e) => e.name).toList();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -311,34 +325,35 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
         children: [
           Text(
             'Seleccionar Ejercicio',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: selectedExercise?.id,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: theme.colorScheme.surface,
-              prefixIcon: Icon(
-                Icons.fitness_center,
-                color: theme.colorScheme.primary,
+          CustomDropdown<String>(
+            hintText: 'Selecciona un ejercicio',
+            items: exerciseNames,
+            initialItem: selectedExercise?.name,
+            decoration: CustomDropdownDecoration(
+              closedFillColor: theme.colorScheme.surface,
+              expandedFillColor: theme.colorScheme.surface,
+              closedBorderRadius: BorderRadius.circular(12),
+              expandedBorderRadius: BorderRadius.circular(12),
+              headerStyle: TextStyle(
+                color: theme.colorScheme.onSurface,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+              listItemStyle: TextStyle(
+                color: theme.colorScheme.onSurface,
               ),
-              hintText: 'Selecciona un ejercicio',
             ),
-            items: exercises.map((exercise) {
-              return DropdownMenuItem<String>(
-                value: exercise.id,
-                child: Text(exercise.name),
-              );
-            }).toList(),
-            onChanged: (id) {
-              if (id != null) {
-                provider.setSelectedExercise(id);
-                
+            onChanged: (String? value) {
+              if (value != null) {
+                // Buscar el ID del ejercicio por su nombre
+                final exercise = exercises.firstWhere(
+                  (e) => e.name == value,
+                  orElse: () => exercises.first,
+                );
+                provider.setSelectedExercise(exercise.id);
+
                 // Update the text controllers
                 final selected = provider.selectedExercise;
                 if (selected != null) {
@@ -352,10 +367,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildCurrentRMInfo(Exercise exercise) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -374,7 +389,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
         children: [
           Text(
             'RM Actual',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
@@ -450,13 +466,16 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
                       final weight = double.parse(weightText);
                       Provider.of<ExerciseProvider>(context, listen: false)
                           .updateExercise(exercise.id, exercise.name, weight);
-                      
+
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('RM actualizado correctamente')),
+                        const SnackBar(
+                            content: Text('RM actualizado correctamente')),
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Por favor ingresa un número válido')),
+                        const SnackBar(
+                            content:
+                                Text('Por favor ingresa un número válido')),
                       );
                     }
                   }
@@ -473,10 +492,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildProgressChart(List<ExerciseProgress> progressData) {
     final theme = Theme.of(context);
-    
+
     // We need at least 2 data points for a meaningful chart
     if (progressData.length < 2) {
       return Container(
@@ -500,7 +519,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
               children: [
                 Text(
                   'Progreso',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 TextButton.icon(
                   onPressed: _showDateRangeDialog,
@@ -544,16 +564,18 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
         ),
       );
     }
-    
+
     // Find min and max values for better scaling
-    double minY = progressData.map((e) => e.weight).reduce((a, b) => a < b ? a : b) * 0.9;
-    double maxY = progressData.map((e) => e.weight).reduce((a, b) => a > b ? a : b) * 1.1;
-    
+    double minY =
+        progressData.map((e) => e.weight).reduce((a, b) => a < b ? a : b) * 0.9;
+    double maxY =
+        progressData.map((e) => e.weight).reduce((a, b) => a > b ? a : b) * 1.1;
+
     // Convert to spots for FL Chart
     final spots = progressData.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value.weight);
     }).toList();
-    
+
     return Container(
       height: 280,
       padding: const EdgeInsets.all(16),
@@ -576,7 +598,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
             children: [
               Text(
                 'Progreso',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton.icon(
                 onPressed: _showDateRangeDialog,
@@ -611,9 +634,12 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
                           showTitles: true,
                           reservedSize: 30,
                           getTitlesWidget: (value, meta) {
-                            if (value.toInt() >= 0 && value.toInt() < progressData.length) {
+                            if (value.toInt() >= 0 &&
+                                value.toInt() < progressData.length) {
                               // Show dates for selected entries
-                              if (value.toInt() % (progressData.length ~/ 5 + 1) == 0) {
+                              if (value.toInt() %
+                                      (progressData.length ~/ 5 + 1) ==
+                                  0) {
                                 final date = progressData[value.toInt()].date;
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
@@ -643,8 +669,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
                           },
                         ),
                       ),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
                     ),
                     borderData: FlBorderData(show: false),
                     minX: 0,
@@ -654,7 +682,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
                     lineBarsData: [
                       LineChartBarData(
                         spots: spots.map((spot) {
-                          return FlSpot(spot.x, minY + (spot.y - minY) * _animation.value);
+                          return FlSpot(spot.x,
+                              minY + (spot.y - minY) * _animation.value);
                         }).toList(),
                         isCurved: true,
                         color: theme.colorScheme.primary,
@@ -707,10 +736,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildPercentagesTable(List<Map<String, dynamic>> percentages) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -729,7 +758,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
         children: [
           Text(
             'Tabla de Porcentajes RM',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GridView.builder(
@@ -777,10 +807,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildFilterOptions() {
     final theme = Theme.of(context);
-    
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -790,7 +820,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
           children: [
             Text(
               'Ordenar por',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildFilterOption(
@@ -860,7 +891,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildFilterOption({
     required IconData icon,
     required String title,
@@ -869,7 +900,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -883,7 +914,9 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
           children: [
             Icon(
               icon,
-              color: selected ? theme.colorScheme.primary : theme.colorScheme.onBackground.withOpacity(0.6),
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onBackground.withOpacity(0.6),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -914,7 +947,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen> with SingleTick
       ),
     );
   }
-  
+
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }

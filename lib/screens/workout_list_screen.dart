@@ -13,7 +13,8 @@ class WorkoutListScreen extends StatefulWidget {
   _WorkoutListScreenState createState() => _WorkoutListScreenState();
 }
 
-class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTickerProviderStateMixin {
+class _WorkoutListScreenState extends State<WorkoutListScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _animation;
@@ -85,7 +86,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar entrenamientos...',
-                prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
+                prefixIcon:
+                    Icon(Icons.search, color: theme.colorScheme.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -104,7 +106,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
 
           // Workout list
           Expanded(
-            child: Consumer<WorkoutProvider>(builder: (context, provider, child) {
+            child:
+                Consumer<WorkoutProvider>(builder: (context, provider, child) {
               final workouts = provider.getFilteredWorkouts();
 
               if (workouts.isEmpty) {
@@ -139,7 +142,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 itemCount: workouts.length,
                 itemBuilder: (context, index) {
                   final workout = workouts[index];
@@ -271,7 +275,9 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
         selectedColor: theme.colorScheme.primary.withOpacity(0.2),
         checkmarkColor: theme.colorScheme.primary,
         labelStyle: TextStyle(
-          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
@@ -320,7 +326,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () {
-        Provider.of<WorkoutProvider>(context, listen: false).selectWorkout(workout.id);
+        Provider.of<WorkoutProvider>(context, listen: false)
+            .selectWorkout(workout.id);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -344,7 +351,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
                 topRight: Radius.circular(16),
               ),
               child: Image.network(
-                workout.imageUrl ?? "https://pixabay.com/get/g8ba5e8c41aa0548f299dd6bbdaa01a0f2e30fb8076d56ecc7c4cbe2b469570e00b43c151a0d89fce219400b9f6893714932c903edfe776a600689f070ea801e2_1280.jpg",
+                workout.imageUrl ??
+                    "https://pixabay.com/get/g8ba5e8c41aa0548f299dd6bbdaa01a0f2e30fb8076d56ecc7c4cbe2b469570e00b43c151a0d89fce219400b9f6893714932c903edfe776a600689f070ea801e2_1280.jpg",
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -378,7 +386,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getWorkoutTypeColor(workout.type, theme).withOpacity(0.1),
+                          color: _getWorkoutTypeColor(workout.type, theme)
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -396,13 +405,15 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> with SingleTicker
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getDifficultyColor(workout.difficulty, theme).withOpacity(0.1),
+                          color: _getDifficultyColor(workout.difficulty, theme)
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           workout.getDifficultyText(),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: _getDifficultyColor(workout.difficulty, theme),
+                            color:
+                                _getDifficultyColor(workout.difficulty, theme),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

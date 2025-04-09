@@ -11,7 +11,8 @@ class WorkoutDetailScreen extends StatefulWidget {
   _WorkoutDetailScreenState createState() => _WorkoutDetailScreenState();
 }
 
-class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTickerProviderStateMixin {
+class _WorkoutDetailScreenState extends State<WorkoutDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _showMobilityExercises = false;
 
@@ -55,7 +56,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(8),
@@ -72,7 +74,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    workout.imageUrl ?? "https://pixabay.com/get/g2ce2f4d63e9ae12dc47a0cbe174378b674e927796988b3243b9d78bbc5839bbcafa90e70d9a4e25cf41f12e0b25103ac83cf65916e52bd26a911936b735f9ada_1280.jpg",
+                    workout.imageUrl ??
+                        "https://pixabay.com/get/g2ce2f4d63e9ae12dc47a0cbe174378b674e927796988b3243b9d78bbc5839bbcafa90e70d9a4e25cf41f12e0b25103ac83cf65916e52bd26a911936b735f9ada_1280.jpg",
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -184,7 +187,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
                         color: theme.colorScheme.primary.withOpacity(0.1),
                       ),
                       labelColor: theme.colorScheme.primary,
-                      unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+                      unselectedLabelColor:
+                          theme.colorScheme.onSurface.withOpacity(0.6),
                       tabs: const [
                         Tab(text: 'Warmup'),
                         Tab(text: 'Fuerza'),
@@ -281,7 +285,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
           ),
 
           // Additional parameters if available
-          if (component.parameters != null) ...[  // Fixed bracket syntax
+          if (component.parameters != null) ...[
+            // Fixed bracket syntax
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -384,7 +389,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
                   ),
                 ),
                 Icon(
-                  _showMobilityExercises ? Icons.expand_less : Icons.expand_more,
+                  _showMobilityExercises
+                      ? Icons.expand_less
+                      : Icons.expand_more,
                   color: theme.colorScheme.primary,
                 ),
               ],

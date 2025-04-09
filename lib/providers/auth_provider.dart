@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
-import '../router/router_notifier.dart'; // Aquí está la instancia válida y única
+import '../router/router_notifier.dart';
 
 enum AuthStatus { initial, authenticated, unauthenticated, onboarding }
 
@@ -11,8 +11,6 @@ class AuthProvider extends ChangeNotifier {
   UserProfile? _userProfile;
   int _onboardingStep = 0;
   final int _totalOnboardingSteps = 6;
-
-  AppRouterNotifier? _routerNotifier;
 
   AuthStatus get authStatus => _authStatus;
   UserProfile? get userProfile => _userProfile;
@@ -41,16 +39,13 @@ class AuthProvider extends ChangeNotifier {
 
   get dietaryHabits => null;
 
-  void setRouterNotifier(AppRouterNotifier routerNotifier) {
-    _routerNotifier = routerNotifier;
-  }
-
   void _notifyAndUpdateRouter() {
     notifyListeners();
-    _routerNotifier?.refresh();
+    routerNotifier.refresh();
   }
 
   Future<void> _loadUserFromStorage() async {
+    await Future.delayed(const Duration(milliseconds: 50));
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString('user_data');
 

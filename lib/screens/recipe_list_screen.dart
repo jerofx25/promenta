@@ -12,7 +12,8 @@ class RecipeListScreen extends StatefulWidget {
   _RecipeListScreenState createState() => _RecipeListScreenState();
 }
 
-class _RecipeListScreenState extends State<RecipeListScreen> with SingleTickerProviderStateMixin {
+class _RecipeListScreenState extends State<RecipeListScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
 
@@ -70,7 +71,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> with SingleTickerPr
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar recetas...',
-                prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
+                prefixIcon:
+                    Icon(Icons.search, color: theme.colorScheme.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -99,7 +101,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> with SingleTickerPr
               _buildTab('Cena', Icons.dinner_dining),
             ],
             onTap: (index) {
-              final provider = Provider.of<RecipeProvider>(context, listen: false);
+              final provider =
+                  Provider.of<RecipeProvider>(context, listen: false);
               switch (index) {
                 case 0:
                   provider.setMealTypeFilter(null);
@@ -122,7 +125,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> with SingleTickerPr
 
           // Recipe list
           Expanded(
-            child: Consumer<RecipeProvider>(builder: (context, provider, child) {
+            child:
+                Consumer<RecipeProvider>(builder: (context, provider, child) {
               final recipes = provider.getFilteredRecipes();
 
               if (recipes.isEmpty) {
@@ -227,7 +231,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> with SingleTickerPr
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () {
-        Provider.of<RecipeProvider>(context, listen: false).selectRecipe(recipe.id);
+        Provider.of<RecipeProvider>(context, listen: false)
+            .selectRecipe(recipe.id);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -255,7 +260,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> with SingleTickerPr
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      recipe.imageUrl ?? "https://pixabay.com/get/g017315c430cca167d9d976a80d92cf078dfbdffbe94ec8db4bc17618f6a98f386d955da9ecc4fddd34e0c6412218b00dbb5f099d1d6b73fef307b6c7c2b1e787_1280.jpg",
+                      recipe.imageUrl ??
+                          "https://pixabay.com/get/g017315c430cca167d9d976a80d92cf078dfbdffbe94ec8db4bc17618f6a98f386d955da9ecc4fddd34e0c6412218b00dbb5f099d1d6b73fef307b6c7c2b1e787_1280.jpg",
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
