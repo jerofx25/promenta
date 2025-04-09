@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
+import 'dart:ui'; // Importar para ImageFilter
 
 import 'screens/fitness_tracker_screen.dart';
 import 'screens/rm_calculator_screen.dart';
@@ -16,13 +17,22 @@ import 'providers/workout_provider.dart';
 import 'providers/recipe_provider.dart';
 import 'providers/auth_provider.dart';
 import 'router/app_router.dart';
-import 'router/router_notifier.dart'; // ✅ Importamos el notifier global
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ExerciseProvider()),
+        ChangeNotifierProvider(create: (_) => WorkoutProvider()),
+        ChangeNotifierProvider(create: (_) => RecipeProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -30,32 +40,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider<AuthProvider>(
-          create: (context) {
-            final authProvider = AuthProvider();
-            authProvider.setRouterNotifier(routerNotifier); // ✅ Correcto
-            return authProvider;
-          },
-        ),
-        ChangeNotifierProvider(create: (_) => ExerciseProvider()),
-        ChangeNotifierProvider(create: (_) => WorkoutProvider()),
-        ChangeNotifierProvider(create: (_) => RecipeProvider()),
-      ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return MaterialApp.router(
-            title: 'Fitness Tracker',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: themeProvider.themeMode,
-            routerConfig: appRouter, // ✅ Usa GoRouter correctamente
-          );
-        },
-      ),
+    return MaterialApp.router(
+      title: 'DreamFlow',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme(),
+      darkTheme: AppTheme.darkTheme(),
+      themeMode: ThemeMode.dark,
+      routerConfig: appRouter,
     );
   }
 }
@@ -64,7 +55,7 @@ class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
@@ -74,56 +65,92 @@ class _MainScreenState extends State<MainScreen> {
     const FitnessTrackerScreen(),
     const WorkoutListScreen(),
     const RMCalculatorScreen(),
-    const TimerScreen(),
     const RecipeListScreen(),
-    const ProgressDashboardScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      body: _screens[_currentIndex],
-      extendBody: true,
-      bottomNavigationBar: CurvedNavigationBar(
-        index: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        height: 60.0,
-        backgroundColor: Colors.transparent,
-        color: theme.colorScheme.surface,
-        buttonBackgroundColor: theme.colorScheme.primary,
-        animationDuration: const Duration(milliseconds: 300),
-        items: [
-          _navItem(Icons.home_outlined, 'Home', 0),
-          _navItem(Icons.fitness_center_outlined, 'Rutinas', 1),
-          _navItem(Icons.monitor_weight_outlined, 'Calculadora', 2),
-          _navItem(Icons.timer_outlined, 'Timer', 3),
-          _navItem(Icons.restaurant_menu_outlined, 'Recetas', 4),
-          _navItem(Icons.bar_chart_outlined, 'Progreso', 5),
-        ],
-      ),
-    );
-  }
+    final mediaQueryPadding = MediaQuery.of(context).padding;
+    final double bottomPadding = mediaQueryPadding.bottom < 34 ? 8.0 : 0.0;
 
-  CurvedNavigationBarItem _navItem(IconData icon, String label, int index) {
-    final theme = Theme.of(context);
-    final isSelected = _currentIndex == index;
-    return CurvedNavigationBarItem(
-      child: Icon(
-        icon,
-        color: isSelected
-            ? theme.colorScheme.onPrimary
-            : theme.colorScheme.onBackground.withOpacity(0.7),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: theme.colorScheme.surface,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+                ? Brightness.light
+                : Brightness.dark,
       ),
-      label: label,
-      labelStyle: TextStyle(
-        color: theme.colorScheme.onBackground.withOpacity(0.7),
-        fontSize: 10,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Scaffold(
+        body: _screens[_currentIndex],
+        extendBody: true,
+        // Barra de navegación con estilo curvo (sin efecto flotante y sin transparencia)
+        bottomNavigationBar: CurvedNavigationBar(
+          backgroundColor:
+              Colors.transparent, // Fondo transparente para extendBody
+          color: theme.colorScheme.primary
+              .withOpacity(0.8), // Color primario para mejor contraste
+          buttonBackgroundColor: theme.colorScheme
+              .primary, // Mismo color pero sólido para el botón seleccionado
+          height: 60,
+          index: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          items: [
+            CurvedNavigationBarItem(
+              child: Icon(
+                Icons.home,
+                color: Colors.white, // Color blanco para los iconos
+              ),
+              label: 'Home',
+              labelStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold, // Hacer el texto más visible
+              ),
+            ),
+            CurvedNavigationBarItem(
+              child: Icon(
+                Icons.fitness_center,
+                color: Colors.white,
+              ),
+              label: 'Fitness',
+              labelStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            CurvedNavigationBarItem(
+              child: Icon(
+                Icons.monitor_weight,
+                color: Colors.white,
+              ),
+              label: 'Weight',
+              labelStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            CurvedNavigationBarItem(
+              child: Icon(
+                Icons.restaurant_menu,
+                color: Colors.white,
+              ),
+              label: 'Menu',
+              labelStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

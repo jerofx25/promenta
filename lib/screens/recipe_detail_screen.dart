@@ -11,7 +11,8 @@ class RecipeDetailScreen extends StatefulWidget {
   _RecipeDetailScreenState createState() => _RecipeDetailScreenState();
 }
 
-class _RecipeDetailScreenState extends State<RecipeDetailScreen> with SingleTickerProviderStateMixin {
+class _RecipeDetailScreenState extends State<RecipeDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _liked = false;
 
@@ -55,7 +56,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> with SingleTick
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(8),
@@ -72,7 +74,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> with SingleTick
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    recipe.imageUrl ?? "https://pixabay.com/get/gfdd69c81ced52694716baa327bbcc6a82f715ddefd188020a2e64773abccf80289eb8497324cba8def0418506a7005512d578015637019a8f20e203d31356bf8_1280.jpg",
+                    recipe.imageUrl ??
+                        "https://pixabay.com/get/gfdd69c81ced52694716baa327bbcc6a82f715ddefd188020a2e64773abccf80289eb8497324cba8def0418506a7005512d578015637019a8f20e203d31356bf8_1280.jpg",
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -124,7 +127,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> with SingleTick
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        _liked ? 'Añadido a favoritos' : 'Eliminado de favoritos',
+                        _liked
+                            ? 'Añadido a favoritos'
+                            : 'Eliminado de favoritos',
                       ),
                     ),
                   );
@@ -165,7 +170,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> with SingleTick
                   const SizedBox(height: 24),
 
                   // Nutrition Facts
-                  if (recipe.nutritionFacts != null) ...[  // Fixed bracket syntax
+                  if (recipe.nutritionFacts != null) ...[
+                    // Fixed bracket syntax
                     Text(
                       'Información Nutricional',
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -222,7 +228,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> with SingleTick
                         color: theme.colorScheme.primary.withOpacity(0.1),
                       ),
                       labelColor: theme.colorScheme.primary,
-                      unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+                      unselectedLabelColor:
+                          theme.colorScheme.onSurface.withOpacity(0.6),
                       tabs: const [
                         Tab(text: 'Ingredientes'),
                         Tab(text: 'Preparación'),

@@ -65,15 +65,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
         Text(
           widget.label,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: _isFocused 
+            color: _isFocused
                 ? colorScheme.primary
                 : colorScheme.onBackground.withOpacity(0.7),
             fontWeight: FontWeight.w500,
           ),
         )
-        .animate()
-        .fadeIn(duration: const Duration(milliseconds: 300))
-        .slideY(begin: 0.2, end: 0),
+            .animate()
+            .fadeIn(duration: const Duration(milliseconds: 300))
+            .slideY(begin: 0.2, end: 0),
 
         const SizedBox(height: 8),
 
@@ -93,13 +93,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
               color: colorScheme.onBackground.withOpacity(0.4),
             ),
             filled: true,
-            fillColor: _isFocused 
+            fillColor: _isFocused
                 ? colorScheme.primary.withOpacity(0.05)
                 : colorScheme.surface,
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: _isFocused 
+                    color: _isFocused
                         ? colorScheme.primary
                         : colorScheme.onBackground.withOpacity(0.6),
                   )
@@ -108,7 +108,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 ? IconButton(
                     icon: Icon(
                       widget.suffixIcon,
-                      color: _isFocused 
+                      color: _isFocused
                           ? colorScheme.primary
                           : colorScheme.onBackground.withOpacity(0.6),
                     ),
@@ -153,9 +153,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
           ),
         )
-        .animate()
-        .fadeIn(duration: const Duration(milliseconds: 400))
-        .slideY(begin: 0.3, end: 0),
+            .animate()
+            .fadeIn(duration: const Duration(milliseconds: 400))
+            .slideY(begin: 0.3, end: 0),
       ],
     );
   }

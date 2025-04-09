@@ -16,6 +16,8 @@ import '../screens/onboarding/injuries_screen.dart';
 import '../screens/onboarding/training_goal_screen.dart';
 import '../screens/onboarding/dietary_preferences_screen.dart';
 import '../screens/onboarding/profile_photo_screen.dart';
+import '../screens/timer_screen.dart';
+import '../screens/progress_dashboard_screen.dart';
 import 'router_notifier.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -50,9 +52,12 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
-    /// Ruta raíz — evita el error de GoException
+    /// Ruta raíz — necesita un builder aunque tenga redirect
     GoRoute(
       path: '/',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text("Loading...")),
+      ),
       redirect: (context, state) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final authStatus = authProvider.authStatus;
@@ -164,12 +169,28 @@ final GoRouter appRouter = GoRouter(
       name: 'profile',
       builder: (context, state) => const ProfileScreen(),
     ),
+
+    /// Ruta del Timer
+    GoRoute(
+      path: '/timer',
+      name: 'timer',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const TimerScreen(),
+        transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+
+    /// Ruta del Dashboard de Progreso
+    GoRoute(
+      path: '/progress',
+      name: 'progress',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const ProgressDashboardScreen(),
+        transitionsBuilder: _slideUpTransition,
+      ),
+    ),
   ],
 );
-
-class AppRouterNotifier extends ChangeNotifier {
-  void refresh() => notifyListeners();
-}
 
 /// Transiciones
 Widget _fadeTransition(

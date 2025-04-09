@@ -7,6 +7,8 @@ import '../widgets/progress_pie_chart.dart';
 import '../widgets/stacked_column_chart.dart';
 import '../widgets/radar_chart.dart';
 import 'package:draggable_fab/draggable_fab.dart';
+import '../screens/timer_screen.dart';
+import '../screens/progress_dashboard_screen.dart';
 
 class FitnessTrackerScreen extends StatefulWidget {
   const FitnessTrackerScreen({Key? key}) : super(key: key);
@@ -127,7 +129,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
         ),
       ),
       floatingActionButton: DraggableFab(
-        initPosition: const Offset(50, 50),
+        initPosition: Offset(MediaQuery.of(context).size.width - 20, 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -172,12 +174,19 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
             _buildAnimatedButton(
               index: 2,
               child: FloatingActionButton(
-                heroTag: 'notifications',
-                backgroundColor: theme.colorScheme.primary,
-                child: const Icon(Icons.notifications),
-                onPressed: () {
-                  // Implementar navegación a notificaciones
-                },
+                heroTag: 'timer',
+                backgroundColor: theme.colorScheme.secondary,
+                child: const Icon(Icons.timer_outlined),
+                onPressed: () => context.goNamed('timer'),
+              ),
+            ),
+            _buildAnimatedButton(
+              index: 3,
+              child: FloatingActionButton(
+                heroTag: 'progress',
+                backgroundColor: theme.colorScheme.tertiary,
+                child: const Icon(Icons.bar_chart_outlined),
+                onPressed: () => context.goNamed('progress'),
               ),
             ),
           ],
