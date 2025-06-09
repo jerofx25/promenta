@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 
-
 class ProfilePhotoScreen extends StatefulWidget {
   const ProfilePhotoScreen({Key? key}) : super(key: key);
 
@@ -12,7 +11,8 @@ class ProfilePhotoScreen extends StatefulWidget {
   State<ProfilePhotoScreen> createState() => _ProfilePhotoScreenState();
 }
 
-class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTickerProviderStateMixin {
+class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
+    with SingleTickerProviderStateMixin {
   bool _hasSelectedImage = false;
   String? _imageUrl;
   late AnimationController _animationController;
@@ -25,7 +25,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     // Start animation after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
@@ -44,12 +44,13 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
     setState(() {
       _isLoading = true;
     });
-    
+
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() {
       _hasSelectedImage = true;
-      _imageUrl = "https://pixabay.com/get/g1d3f3794e44fba15083c2eca84405f0b2421cb09110dcf3093ce70aaa770d5a3407a98728c02de054d0422bb9f6d23387a041896bf01ae56b896ccaacecc4ced_1280.jpg";
+      _imageUrl =
+          "https://pixabay.com/get/g1d3f3794e44fba15083c2eca84405f0b2421cb09110dcf3093ce70aaa770d5a3407a98728c02de054d0422bb9f6d23387a041896bf01ae56b896ccaacecc4ced_1280.jpg";
       _isLoading = false;
     });
   }
@@ -60,12 +61,13 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
     setState(() {
       _isLoading = true;
     });
-    
+
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() {
       _hasSelectedImage = true;
-      _imageUrl = "https://pixabay.com/get/g27293d196a0c6534cafee9a4975b3509c2a80f7e4529385a809bdf3b0abd7c29c4b452f81c897db2cad0f289195e454d4b48a9168e8a98922fddb6af2b180132_1280.jpg";
+      _imageUrl =
+          "https://pixabay.com/get/g27293d196a0c6534cafee9a4975b3509c2a80f7e4529385a809bdf3b0abd7c29c4b452f81c897db2cad0f289195e454d4b48a9168e8a98922fddb6af2b180132_1280.jpg";
       _isLoading = false;
     });
   }
@@ -73,7 +75,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
   void _handleContinue() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (_hasSelectedImage && _imageUrl != null) {
-      authProvider.setProfileImage(_imageUrl!);
+      authProvider.setPhotoUrl(_imageUrl!);
     }
     authProvider.nextOnboardingStep();
   }
@@ -87,7 +89,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: Stack(
         children: [
@@ -113,7 +115,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
               ),
             ),
           ),
-          
+
           // Content
           SafeArea(
             child: SingleChildScrollView(
@@ -124,23 +126,24 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
                   // Progress indicator
                   Consumer<AuthProvider>(builder: (context, authProvider, _) {
                     return LinearProgressIndicator(
-                      value: (authProvider.onboardingStep + 1) / authProvider.totalOnboardingSteps,
+                      value: (authProvider.onboardingStep + 1) /
+                          authProvider.totalOnboardingSteps,
                       backgroundColor: Colors.white.withOpacity(0.1),
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(10),
                       minHeight: 8,
                     )
-                    .animate(controller: _animationController)
-                    .fadeIn(duration: 400.ms)
-                    .slideX(begin: -0.1, end: 0);
+                        .animate(controller: _animationController)
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: -0.1, end: 0);
                   }),
-                  
+
                   // Back button
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: _handleBack,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_back_ios,
                         color: Colors.white,
                       ),
@@ -150,12 +153,12 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
                       ),
                     ),
                   )
-                  .animate(controller: _animationController)
-                  .fadeIn(duration: 400.ms)
-                  .slideX(begin: -0.2, end: 0),
-                  
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 400.ms)
+                      .slideX(begin: -0.2, end: 0),
+
                   SizedBox(height: size.height * 0.02),
-                  
+
                   // Title
                   Text(
                     'Foto de Perfil',
@@ -164,61 +167,61 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
                       color: Colors.white,
                     ),
                   )
-                  .animate(controller: _animationController)
-                  .fadeIn(duration: 500.ms, delay: 100.ms)
-                  .slideY(begin: 0.2, end: 0),
-                  
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 500.ms, delay: 100.ms)
+                      .slideY(begin: 0.2, end: 0),
+
                   const SizedBox(height: 8),
-                  
+
                   Text(
-                    'Au00f1ade una foto para personalizar tu perfil y seguir tu progreso',
+                    'Añade una foto para personalizar tu perfil y seguir tu progreso',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white.withOpacity(0.8),
                     ),
                   )
-                  .animate(controller: _animationController)
-                  .fadeIn(duration: 500.ms, delay: 200.ms)
-                  .slideY(begin: 0.2, end: 0),
-                  
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 500.ms, delay: 200.ms)
+                      .slideY(begin: 0.2, end: 0),
+
                   SizedBox(height: size.height * 0.04),
-                  
+
                   // Photo section
                   Center(
                     child: _hasSelectedImage
                         ? _buildSelectedPhoto()
                         : _buildPhotoPlaceholder(),
                   ),
-                  
+
                   SizedBox(height: size.height * 0.04),
-                  
+
                   // Photo selection buttons
                   if (!_hasSelectedImage)
                     _buildPhotoSelectionButtons()
-                    .animate(controller: _animationController)
-                    .fadeIn(duration: 500.ms, delay: 400.ms)
-                    .slideY(begin: 0.2, end: 0),
-                  
+                        .animate(controller: _animationController)
+                        .fadeIn(duration: 500.ms, delay: 400.ms)
+                        .slideY(begin: 0.2, end: 0),
+
                   // Why we need the photo section
                   if (!_hasSelectedImage)
                     _buildInfoSection()
-                    .animate(controller: _animationController)
-                    .fadeIn(duration: 500.ms, delay: 500.ms),
-                  
+                        .animate(controller: _animationController)
+                        .fadeIn(duration: 500.ms, delay: 500.ms),
+
                   SizedBox(height: size.height * 0.04),
-                  
+
                   // Continue button
                   CustomButton(
                     text: _hasSelectedImage ? 'Continuar' : 'Omitir por ahora',
                     onPressed: _handleContinue,
                     width: double.infinity,
                   )
-                  .animate(controller: _animationController)
-                  .fadeIn(duration: 600.ms, delay: 600.ms)
-                  .slideY(begin: 0.3, end: 0),
-                  
-                  if (_hasSelectedImage) ...[  // Fixed bracket syntax
+                      .animate(controller: _animationController)
+                      .fadeIn(duration: 600.ms, delay: 600.ms)
+                      .slideY(begin: 0.3, end: 0),
+
+                  if (_hasSelectedImage) ...[
                     const SizedBox(height: 16),
-                    
+
                     // Retake photo button
                     Center(
                       child: TextButton.icon(
@@ -241,15 +244,13 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
                           ),
                         ),
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 400.ms),
+                    ).animate().fadeIn(duration: 400.ms),
                   ],
                 ],
               ),
             ),
           ),
-          
+
           // Loading indicator
           if (_isLoading)
             Container(
@@ -264,10 +265,10 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildSelectedPhoto() {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: 200,
       height: 200,
@@ -294,7 +295,8 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
             return Center(
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
                     : null,
                 color: theme.colorScheme.primary,
               ),
@@ -303,14 +305,14 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
         ),
       ),
     )
-    .animate()
-    .scale(duration: 600.ms, curve: Curves.elasticOut)
-    .slideY(begin: 0.2, end: 0);
+        .animate()
+        .scale(duration: 600.ms, curve: Curves.elasticOut)
+        .slideY(begin: 0.2, end: 0);
   }
-  
+
   Widget _buildPhotoPlaceholder() {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: 200,
       height: 200,
@@ -329,14 +331,17 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
         color: Colors.white.withOpacity(0.7),
       ),
     )
-    .animate(controller: _animationController)
-    .fadeIn(duration: 500.ms, delay: 300.ms)
-    .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0), curve: Curves.easeOut);
+        .animate(controller: _animationController)
+        .fadeIn(duration: 500.ms, delay: 300.ms)
+        .scale(
+            begin: const Offset(0.8, 0.8),
+            end: const Offset(1.0, 1.0),
+            curve: Curves.easeOut);
   }
-  
+
   Widget _buildPhotoSelectionButtons() {
     final theme = Theme.of(context);
-    
+
     return Row(
       children: [
         // Take photo button
@@ -344,7 +349,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
           child: ElevatedButton.icon(
             onPressed: _takePicture,
             icon: const Icon(Icons.camera_alt),
-            label: const Text('Cu00e1mara'),
+            label: const Text('Cámara'),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: theme.colorScheme.onPrimary,
@@ -355,15 +360,15 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
             ),
           ),
         ),
-        
+
         const SizedBox(width: 16),
-        
+
         // Gallery button
         Expanded(
           child: OutlinedButton.icon(
             onPressed: _selectFromGallery,
             icon: const Icon(Icons.photo_library),
-            label: const Text('Galeru00eda'),
+            label: const Text('Galería'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
               side: const BorderSide(color: Colors.white, width: 1),
@@ -377,10 +382,10 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
       ],
     );
   }
-  
+
   Widget _buildInfoSection() {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.only(top: 32),
       padding: const EdgeInsets.all(16),
@@ -399,7 +404,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
               ),
               const SizedBox(width: 8),
               Text(
-                'u00bfPor quu00e9 au00f1adir una foto?',
+                '¿Por qué añadir una foto?',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -415,7 +420,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
           const SizedBox(height: 8),
           _buildInfoItem(
             icon: Icons.verified_user,
-            text: 'Personalizaciu00f3n de tu perfil',
+            text: 'Personalización de tu perfil',
           ),
           const SizedBox(height: 8),
           _buildInfoItem(
@@ -426,7 +431,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> with SingleTick
       ),
     );
   }
-  
+
   Widget _buildInfoItem({required IconData icon, required String text}) {
     return Row(
       children: [

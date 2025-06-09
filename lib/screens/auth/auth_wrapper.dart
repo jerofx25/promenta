@@ -10,7 +10,7 @@ import '../onboarding/injuries_screen.dart';
 import '../onboarding/dietary_preferences_screen.dart';
 import '../onboarding/profile_photo_screen.dart';
 import '../fitness_tracker_screen.dart';
-import 'package:dreamflow/main.dart';
+import '../home/home_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({Key? key}) : super(key: key);
@@ -30,7 +30,7 @@ class AuthWrapper extends StatelessWidget {
 
         // If the user is authenticated, show the main app
         if (authProvider.authStatus == AuthStatus.authenticated) {
-          return const MainScreen();
+          return const HomeScreen();
         }
 
         // If the user is in the onboarding process, show the appropriate screen
