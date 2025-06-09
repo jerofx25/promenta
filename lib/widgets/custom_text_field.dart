@@ -9,8 +9,8 @@ class CustomTextField extends StatefulWidget {
   final bool obscureText;
   final String? Function(String?)? validator;
   final IconData? prefixIcon;
-  final IconData? suffixIcon;
-  final VoidCallback? onSuffixIconPressed;
+  final Widget? suffixIcon;
+  final TextCapitalization textCapitalization;
 
   const CustomTextField({
     Key? key,
@@ -22,7 +22,7 @@ class CustomTextField extends StatefulWidget {
     this.validator,
     this.prefixIcon,
     this.suffixIcon,
-    this.onSuffixIconPressed,
+    this.textCapitalization = TextCapitalization.none,
   }) : super(key: key);
 
   @override
@@ -84,6 +84,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           keyboardType: widget.keyboardType,
           obscureText: widget.obscureText,
           validator: widget.validator,
+          textCapitalization: widget.textCapitalization,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: colorScheme.onBackground,
           ),
@@ -104,17 +105,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         : colorScheme.onBackground.withOpacity(0.6),
                   )
                 : null,
-            suffixIcon: widget.suffixIcon != null
-                ? IconButton(
-                    icon: Icon(
-                      widget.suffixIcon,
-                      color: _isFocused
-                          ? colorScheme.primary
-                          : colorScheme.onBackground.withOpacity(0.6),
-                    ),
-                    onPressed: widget.onSuffixIconPressed,
-                  )
-                : null,
+            suffixIcon: widget.suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,

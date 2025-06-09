@@ -41,8 +41,10 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
   void _handleContinue() {
     if (_selectedFrequency != null && _selectedGoal != null) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.setTrainingFrequency(_selectedFrequency!);
-      authProvider.setFitnessGoal(_selectedGoal!);
+      // Actualizar los objetivos del usuario
+      authProvider.setGoals([_selectedGoal!]);
+      // Actualizar el nivel de entrenamiento basado en la frecuencia
+      authProvider.setTrainingLevel(_selectedFrequency!);
       authProvider.nextOnboardingStep();
     } else {
       // Show error message
@@ -118,7 +120,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: _handleBack,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_back_ios,
                         color: Colors.white,
                       ),
@@ -136,7 +138,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
 
                   // Title - Training Frequency
                   Text(
-                    'Indicanos con que frecuencia entrenas?',
+                    '¿Con qué frecuencia entrenas?',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -149,7 +151,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                   const SizedBox(height: 8),
 
                   Text(
-                    'Selecciona la opcion que mejor refleje tus habitos',
+                    'Selecciona la opción que mejor refleje tus hábitos',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white.withOpacity(0.8),
                     ),
@@ -161,7 +163,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                   SizedBox(height: size.height * 0.03),
 
                   // Training frequency options
-                  Container(
+                  SizedBox(
                     height: 210,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -188,7 +190,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
 
                   // Title - Fitness Goals
                   Text(
-                    'Cual es tu objetivo principal?',
+                    '¿Cuál es tu objetivo principal?',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,

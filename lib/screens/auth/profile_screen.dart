@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/user_profile.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class ProfileScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Profile'),
+        title: const Text('Perfil'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -44,10 +45,10 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: user?.profileImageUrl != null
-                        ? NetworkImage(user!.profileImageUrl!)
+                    backgroundImage: user?.photoUrl != null
+                        ? NetworkImage(user!.photoUrl!)
                         : null,
-                    child: user?.profileImageUrl == null
+                    child: user?.photoUrl == null
                         ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
@@ -61,78 +62,64 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text('Tap to update profile photo'),
+            const Text('Toca para actualizar la foto de perfil'),
             const SizedBox(height: 24),
             _sectionCard(
               context,
-              title: 'Personal Information',
+              title: 'Información Personal',
               items: [
-                _infoTile('Name', user?.name ?? ''),
+                _infoTile('Nombre', user?.displayName ?? ''),
                 _infoTile('Email', user?.email ?? ''),
-                _infoTile('Phone', user?.phone ?? 'Not provided'),
-                _infoTile('Age', user?.age?.toString() ?? ''),
+                _infoTile('Edad', user?.age?.toString() ?? ''),
+                _infoTile('Género', user?.gender ?? 'No especificado'),
               ],
             ),
             const SizedBox(height: 16),
             _sectionCard(
               context,
-              title: 'Physical Information',
+              title: 'Información Física',
               items: [
-                _infoTile('Weight (${user?.weightUnit ?? 'kg'})',
-                    user?.weight?.toString() ?? ''),
-                _infoTile('Height (${user?.heightUnit ?? 'cm'})',
-                    user?.height?.toString() ?? ''),
+                _infoTile('Peso (kg)', user?.weight?.toString() ?? ''),
+                _infoTile('Altura (cm)', user?.height?.toString() ?? ''),
+                _infoTile('Porcentaje de grasa',
+                    user?.bodyFatPercentage?.toString() ?? ''),
+                _infoTile('IMC', user?.bmi?.toString() ?? ''),
                 _infoTile(
-                    'Injuries',
+                    'Lesiones',
                     user?.injuries.isEmpty ?? true
-                        ? 'None'
+                        ? 'Ninguna'
                         : user!.injuries.join(', ')),
               ],
             ),
             const SizedBox(height: 16),
             _sectionCard(
               context,
-              title: 'Fitness Goals',
+              title: 'Objetivos y Nivel',
               items: [
-                _infoTile('Training Goal', user?.fitnessGoal ?? ''),
+                _infoTile('Nivel de entrenamiento',
+                    user?.trainingLevel ?? 'No especificado'),
                 _infoTile(
-                    'Diet Preferences', user?.dietaryHabits.join(', ') ?? ''),
+                    'Objetivos',
+                    user?.goals.isEmpty ?? true
+                        ? 'No especificados'
+                        : user!.goals.join(', ')),
               ],
             ),
             const SizedBox(height: 16),
             _sectionCard(
               context,
-              title: 'Progress Photo',
-              child: Container(
-                height: 150,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: theme.colorScheme.background,
-                ),
-                child: Center(
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      const Icon(Icons.image_outlined, size: 60),
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: CircleAvatar(
-                          radius: 16,
-                          backgroundColor: theme.colorScheme.primary,
-                          child: const Icon(Icons.camera_alt,
-                              size: 16, color: Colors.white),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
+              title: 'Información de la Cuenta',
               items: [
-                _infoTile('Date', user?.progressPhotoDate ?? 'Not provided'),
-                _infoTile('Description',
-                    user?.progressPhotoDescription ?? 'No description'),
+                _infoTile(
+                    'Plan Premium', user?.isPremium ?? false ? 'Sí' : 'No'),
+                _infoTile('Plan Generado',
+                    user?.planGenerated ?? false ? 'Sí' : 'No'),
+                _infoTile(
+                    'Versión del Modelo IA', user?.aiModelVersion ?? 'v1.3'),
+                _infoTile('Último inicio de sesión',
+                    user?.lastLogin?.toString() ?? 'No disponible'),
+                _infoTile('Cuenta creada',
+                    user?.createdAt?.toString() ?? 'No disponible'),
               ],
             ),
           ],

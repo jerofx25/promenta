@@ -17,7 +17,6 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
   late ScrollController _scrollController;
   late double _selectedHeight;
   late AnimationController _animationController;
-  String _unit = 'cm'; // Default unit is cm
 
   // Scrolling constants
   final double _itemHeight = 50.0;
@@ -43,32 +42,15 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
   }
 
   void _initializeHeightValues() {
-    if (_unit == 'cm') {
-      _minHeight = OnboardingConstants.minHeightCm;
-      _maxHeight = OnboardingConstants.maxHeightCm;
-      _selectedHeight = OnboardingConstants.defaultHeightCm;
-    } else {
-      _minHeight = OnboardingConstants.minHeightFt;
-      _maxHeight = OnboardingConstants.maxHeightFt;
-      _selectedHeight = OnboardingConstants.defaultHeightFt;
-    }
+    _minHeight = OnboardingConstants.minHeightCm;
+    _maxHeight = OnboardingConstants.maxHeightCm;
+    _selectedHeight = OnboardingConstants.defaultHeightCm;
 
-    // Calculate number of items
-    // For cm, use 1 cm increments
-    // For ft, use 0.1 ft increments
-    if (_unit == 'cm') {
-      _totalItems = (_maxHeight - _minHeight).round() + 1;
-    } else {
-      _totalItems = ((_maxHeight - _minHeight) * 10).round() + 1;
-    }
+    // Calculate number of items (1 cm increments)
+    _totalItems = (_maxHeight - _minHeight).round() + 1;
 
     // Initialize scroll controller with middle position
-    final initialPosition;
-    if (_unit == 'cm') {
-      initialPosition = (_maxHeight - _selectedHeight) * _itemHeight;
-    } else {
-      initialPosition = (_maxHeight - _selectedHeight) * 10 * _itemHeight;
-    }
+    final initialPosition = (_maxHeight - _selectedHeight) * _itemHeight;
     _scrollController = ScrollController(
       initialScrollOffset: initialPosition,
     );
@@ -81,52 +63,13 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
     super.dispose();
   }
 
-  void _toggleUnit() {
-    final oldValue = _selectedHeight;
-    setState(() {
-      // Toggle between cm and ft
-      if (_unit == 'cm') {
-        _unit = 'ft';
-        // Convert cm to ft (1cm = 0.0328084ft)
-        _selectedHeight =
-            double.parse((oldValue * 0.0328084).toStringAsFixed(1));
-      } else {
-        _unit = 'cm';
-        // Convert ft to cm (1ft = 30.48cm)
-        _selectedHeight = double.parse((oldValue * 30.48).toStringAsFixed(0));
-      }
-    });
-
-    // Reinitialize with new unit
-    _scrollController.dispose();
-    _initializeHeightValues();
-
-    // Need to wait for the next frame for the scroll controller to be attached
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        final position;
-        if (_unit == 'cm') {
-          position = (_maxHeight - _selectedHeight) * _itemHeight;
-        } else {
-          position = (_maxHeight - _selectedHeight) * 10 * _itemHeight;
-        }
-        _scrollController.jumpTo(position);
-      }
-    });
-  }
-
   void _selectHeight(double height) {
     setState(() {
       _selectedHeight = height;
     });
 
     // Scroll to the selected height with animation
-    final position;
-    if (_unit == 'cm') {
-      position = (_maxHeight - height) * _itemHeight;
-    } else {
-      position = (_maxHeight - height) * 10 * _itemHeight;
-    }
+    final position = (_maxHeight - height) * _itemHeight;
 
     _scrollController.animateTo(
       position,
@@ -137,26 +80,13 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
 
   void _handleContinue() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setHeight(_selectedHeight, _unit);
+    authProvider.setHeight(_selectedHeight);
     authProvider.nextOnboardingStep();
   }
 
   void _handleBack() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     authProvider.previousOnboardingStep();
-  }
-
-  // Convert height to display format
-  String _getDisplayHeight() {
-    if (_unit == 'cm') {
-      return _selectedHeight.toStringAsFixed(0);
-    } else {
-      // Convert to feet and inches format (e.g., 5'10")
-      final totalFeet = _selectedHeight;
-      final feet = totalFeet.floor();
-      final inches = ((totalFeet - feet) * 12).round();
-      return "$feet'$inches\"";
-    }
   }
 
   @override
@@ -217,7 +147,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: _handleBack,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_back_ios,
                         color: Colors.white,
                       ),
@@ -238,7 +168,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Cual es tu estatura?',
+                        '¿Cuál es tu estatura?',
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -259,24 +189,6 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                           .slideY(begin: 0.2, end: 0),
                     ],
                   ),
-
-                  // Height unit toggle
-                  Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildUnitToggle('cm', _unit == 'cm'),
-                          const SizedBox(width: 20),
-                          _buildUnitToggle('ft', _unit == 'ft'),
-                        ],
-                      ),
-                    ),
-                  )
-                      .animate(controller: _animationController)
-                      .fadeIn(duration: 500.ms, delay: 300.ms),
 
                   // Height display and ruler
                   Expanded(
@@ -305,7 +217,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                 child: Column(
                                   children: [
                                     Text(
-                                      _getDisplayHeight(),
+                                      _selectedHeight.toStringAsFixed(0),
                                       style: theme.textTheme.headlineLarge
                                           ?.copyWith(
                                         fontWeight: FontWeight.bold,
@@ -313,7 +225,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                       ),
                                     ),
                                     Text(
-                                      _unit,
+                                      'cm',
                                       style:
                                           theme.textTheme.titleMedium?.copyWith(
                                         color: Colors.white.withOpacity(0.8),
@@ -345,25 +257,17 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                     if (notification is ScrollEndNotification) {
                                       // Calculate the selected height based on the current scroll position
                                       final offset = _scrollController.offset;
-                                      double height;
-
-                                      if (_unit == 'cm') {
-                                        height =
-                                            _maxHeight - (offset / _itemHeight);
-                                        height = double.parse(
-                                            height.toStringAsFixed(0));
-                                      } else {
-                                        height = _maxHeight -
-                                            (offset / _itemHeight / 10);
-                                        height = double.parse(
-                                            height.toStringAsFixed(1));
-                                      }
+                                      final height =
+                                          _maxHeight - (offset / _itemHeight);
+                                      final roundedHeight = double.parse(
+                                          height.toStringAsFixed(0));
 
                                       // Only update if the selected height has changed
-                                      if ((height - _selectedHeight).abs() >
+                                      if ((roundedHeight - _selectedHeight)
+                                              .abs() >
                                           0.01) {
                                         setState(() {
-                                          _selectedHeight = height;
+                                          _selectedHeight = roundedHeight;
                                         });
                                       }
                                     }
@@ -379,19 +283,9 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                         itemExtent: _itemExtent,
                                         physics: const BouncingScrollPhysics(),
                                         itemBuilder: (context, index) {
-                                          double height;
-                                          bool showLabel = false;
-
-                                          if (_unit == 'cm') {
-                                            height = _minHeight + index;
-                                            // Show label every 5 cm
-                                            showLabel = height % 5 == 0;
-                                          } else {
-                                            height = _minHeight + (index / 10);
-                                            // Show label every 0.5 foot
-                                            showLabel =
-                                                (height * 10).round() % 5 == 0;
-                                          }
+                                          final height = _minHeight + index;
+                                          final showLabel = height % 5 ==
+                                              0; // Show label every 5 cm
 
                                           return GestureDetector(
                                             onTap: () => _selectHeight(height),
@@ -415,13 +309,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                                         const EdgeInsets.only(
                                                             left: 8.0),
                                                     child: Text(
-                                                      _unit == 'cm'
-                                                          ? height
-                                                              .toStringAsFixed(
-                                                                  0)
-                                                          : height
-                                                              .toStringAsFixed(
-                                                                  1),
+                                                      height.toStringAsFixed(0),
                                                       style: theme
                                                           .textTheme.bodySmall
                                                           ?.copyWith(
@@ -562,37 +450,6 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildUnitToggle(String unit, bool isSelected) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: _toggleUnit,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Text(
-          unit.toUpperCase(),
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }

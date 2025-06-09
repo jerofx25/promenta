@@ -17,7 +17,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
   late ScrollController _scrollController;
   late double _selectedWeight;
   late AnimationController _animationController;
-  String _unit = 'kg'; // Default unit is kg
+  String _displayUnit = 'kg'; // Unidad de visualización
 
   // Scrolling constants
   final double _itemWidth = 60.0;
@@ -43,14 +43,20 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
   }
 
   void _initializeWeightValues() {
-    if (_unit == 'kg') {
-      _minWeight = OnboardingConstants.minWeightKg;
-      _maxWeight = OnboardingConstants.maxWeightKg;
-      _selectedWeight = OnboardingConstants.defaultWeightKg;
+    // Valores en kg para almacenamiento
+    const minWeightKg = 30.0; // ~66 lbs
+    const maxWeightKg = 200.0; // ~440 lbs
+    const defaultWeightKg = 70.0; // ~154 lbs
+
+    if (_displayUnit == 'kg') {
+      _minWeight = minWeightKg;
+      _maxWeight = maxWeightKg;
+      _selectedWeight = defaultWeightKg;
     } else {
-      _minWeight = OnboardingConstants.minWeightLbs;
-      _maxWeight = OnboardingConstants.maxWeightLbs;
-      _selectedWeight = OnboardingConstants.defaultWeightLbs;
+      // Convertir los límites a libras para visualización
+      _minWeight = minWeightKg * 2.20462;
+      _maxWeight = maxWeightKg * 2.20462;
+      _selectedWeight = defaultWeightKg * 2.20462;
     }
 
     // Calculate number of items with 0.5 increments
@@ -73,20 +79,20 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
   void _toggleUnit() {
     final oldValue = _selectedWeight;
     setState(() {
-      // Toggle between kg and lbs
-      if (_unit == 'kg') {
-        _unit = 'lbs';
-        // Convert kg to lbs (1kg = 2.20462lbs)
+      // Toggle entre kg y lbs solo para visualización
+      if (_displayUnit == 'kg') {
+        _displayUnit = 'lbs';
+        // Convertir kg a lbs para visualización
         _selectedWeight = double.parse((oldValue * 2.20462).toStringAsFixed(1));
       } else {
-        _unit = 'kg';
-        // Convert lbs to kg (1lbs = 0.453592kg)
+        _displayUnit = 'kg';
+        // Convertir lbs a kg para visualización
         _selectedWeight =
             double.parse((oldValue * 0.453592).toStringAsFixed(1));
       }
     });
 
-    // Reinitialize with new unit
+    // Reinitialize con nueva unidad de visualización
     _scrollController.dispose();
     _initializeWeightValues();
 
@@ -114,7 +120,24 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
 
   void _handleContinue() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setWeight(_selectedWeight, _unit);
+
+    // Convertir a kilogramos antes de guardar
+    final weightInKg = _displayUnit == 'lbs'
+        ? double.parse((_selectedWeight * 0.453592).toStringAsFixed(1))
+        : double.parse(_selectedWeight.toStringAsFixed(1));
+
+    // Obtener la altura actual del usuario (en cm)
+    final heightInM = (authProvider.userProfile?.height ?? 170) /
+        100; // Valor por defecto de 170cm
+
+    // Calcular BMI: peso(kg) / (altura(m))²
+    final bmi =
+        double.parse((weightInKg / (heightInM * heightInM)).toStringAsFixed(1));
+
+    // Actualizar el perfil del usuario
+    authProvider.setWeight(weightInKg);
+    // El BMI se actualizará automáticamente en el backend cuando se actualice el peso
+
     authProvider.nextOnboardingStep();
   }
 
@@ -181,7 +204,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: _handleBack,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_back_ios,
                         color: Colors.white,
                       ),
@@ -202,7 +225,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '¿Cual es tu peso?',
+                        '¿Cuál es tu peso?',
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -213,7 +236,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                           .slideY(begin: 0.2, end: 0),
                       const SizedBox(height: 8),
                       Text(
-                        'Esto nos ayudaria a calcular tus necesidades caloricas',
+                        'Esto nos ayudará a calcular tu IMC y necesidades calóricas',
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: Colors.white.withOpacity(0.8),
                         ),
@@ -230,9 +253,9 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildUnitToggle('kg', _unit == 'kg'),
+                      _buildUnitToggle('kg', _displayUnit == 'kg'),
                       const SizedBox(width: 20),
-                      _buildUnitToggle('lbs', _unit == 'lbs'),
+                      _buildUnitToggle('lbs', _displayUnit == 'lbs'),
                     ],
                   )
                       .animate(controller: _animationController)
@@ -265,7 +288,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _unit,
+                            _displayUnit,
                             style: theme.textTheme.titleLarge?.copyWith(
                               color: Colors.white.withOpacity(0.8),
                             ),
