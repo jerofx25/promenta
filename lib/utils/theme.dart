@@ -120,7 +120,7 @@ class AppTheme {
           color: colorScheme.onBackground.withOpacity(0.7),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: colorScheme.surface,
@@ -214,7 +214,7 @@ class AppTheme {
         thickness: 1,
         space: 24,
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: colorScheme.primary,
         unselectedLabelColor: colorScheme.onBackground.withOpacity(0.6),
         labelStyle: GoogleFonts.poppins(
@@ -308,7 +308,7 @@ class AppTheme {
           color: colorScheme.onBackground.withOpacity(0.7),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: colorScheme.surface,
@@ -402,7 +402,7 @@ class AppTheme {
         thickness: 1,
         space: 24,
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: colorScheme.primary,
         unselectedLabelColor: colorScheme.onBackground.withOpacity(0.6),
         labelStyle: GoogleFonts.poppins(

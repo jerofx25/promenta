@@ -6,6 +6,7 @@ import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'dart:ui'; // Importar para ImageFilter
 
+import 'firebase_options.dart';
 import 'screens/fitness_tracker_screen.dart';
 import 'screens/rm_calculator_screen.dart';
 import 'screens/timer_screen.dart';
@@ -22,7 +23,9 @@ import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   final authService = AuthService();
