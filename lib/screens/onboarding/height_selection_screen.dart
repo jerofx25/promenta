@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/back_button.dart';
 
 class HeightSelectionScreen extends StatefulWidget {
   const HeightSelectionScreen({Key? key}) : super(key: key);
@@ -16,11 +18,13 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
     with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   late double _selectedHeight;
+  late final TextEditingController _heightController;
+  late final FocusNode _heightFocusNode;
   late AnimationController _animationController;
 
-  // Scrolling constants
-  final double _itemHeight = 50.0;
-  final double _itemExtent = 50.0;
+  // Scrolling constants (más denso: 1 cm por item)
+  final double _itemHeight = 20.0;
+  final double _itemExtent = 20.0;
   late int _totalItems;
   late double _minHeight;
   late double _maxHeight;
@@ -45,20 +49,23 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
     _minHeight = OnboardingConstants.minHeightCm;
     _maxHeight = OnboardingConstants.maxHeightCm;
     _selectedHeight = OnboardingConstants.defaultHeightCm;
+    _heightController =
+        TextEditingController(text: _selectedHeight.toStringAsFixed(0));
+    _heightFocusNode = FocusNode();
 
     // Calculate number of items (1 cm increments)
     _totalItems = (_maxHeight - _minHeight).round() + 1;
 
-    // Initialize scroll controller with middle position
-    final initialPosition = (_maxHeight - _selectedHeight) * _itemHeight;
-    _scrollController = ScrollController(
-      initialScrollOffset: initialPosition,
-    );
+    // Initialize scroll controller positioned so that selected value is centered
+    final initialPosition = (_selectedHeight - _minHeight) * _itemHeight;
+    _scrollController = ScrollController(initialScrollOffset: initialPosition);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _heightController.dispose();
+    _heightFocusNode.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -67,6 +74,9 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
     setState(() {
       _selectedHeight = height;
     });
+    if (!_heightFocusNode.hasFocus) {
+      _heightController.text = _selectedHeight.toStringAsFixed(0);
+    }
 
     // Scroll to the selected height with animation
     final position = (_maxHeight - height) * _itemHeight;
@@ -78,9 +88,37 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
     );
   }
 
+  void _applyTypedHeight(String value) {
+    final parsed = double.tryParse(value);
+    if (parsed == null) {
+      // Restaurar valor actual si input inválido
+      _heightController.text = _selectedHeight.toStringAsFixed(0);
+      return;
+    }
+    final clamped = parsed.clamp(_minHeight, _maxHeight).roundToDouble();
+    setState(() {
+      _selectedHeight = clamped;
+      _heightController.text = _selectedHeight.toStringAsFixed(0);
+    });
+    final position = (_selectedHeight - _minHeight) * _itemHeight;
+    _scrollController.animateTo(
+      position,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
+    _heightFocusNode.unfocus();
+  }
+
   void _handleContinue() {
+    // Calcular índice centrado en el viewport
+    final viewport = _scrollController.position.viewportDimension;
+    final centerPosition = _scrollController.offset + viewport / 2;
+    int index = ((centerPosition - _itemExtent / 2) / _itemExtent).round();
+    index = index.clamp(0, _totalItems - 1);
+    final rounded = _minHeight + index;
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setHeight(_selectedHeight);
+    authProvider.setHeight(rounded);
     authProvider.nextOnboardingStep();
   }
 
@@ -97,28 +135,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/ge77ca451695aba2c4a90cb363671435eb0dcc7ab65afeb21e3d9353fcd6b5130e3f5948b2e1f663bb1b7e6a35101b0d81ce85f21374841b801c70efa52ebbb08_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Fondo limpio: sin imagen ni overlay
 
           // Content
           SafeArea(
@@ -142,19 +159,15 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
+                  SizedBox(height: 6),
+
                   // Back button
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: IconButton(
+                    child: BackButton(
                       onPressed: _handleBack,
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black38,
-                        padding: const EdgeInsets.all(12),
-                      ),
+                      icon: Icons.arrow_back_ios,
+                      color: Colors.white,
                     ),
                   )
                       .animate(controller: _animationController)
@@ -203,6 +216,8 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
+                                width:
+                                    140, // ancho fijo para evitar cambios de tamaño
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 25, vertical: 20),
                                 decoration: BoxDecoration(
@@ -216,13 +231,34 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                 ),
                                 child: Column(
                                   children: [
-                                    Text(
-                                      _selectedHeight.toStringAsFixed(0),
+                                    TextField(
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        LengthLimitingTextInputFormatter(3)
+                                      ],
+                                      controller: _heightController,
+                                      focusNode: _heightFocusNode,
+                                      textAlign: TextAlign.center,
+                                      onChanged: (value) {
+                                        // Solo actualizar cuando se complete el último valor
+                                        if (value.length == 3) {
+                                          _applyTypedHeight(value);
+                                        }
+                                      },
                                       style: theme.textTheme.headlineLarge
                                           ?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
+                                      decoration: const InputDecoration(
+                                        isCollapsed: true,
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                      onSubmitted: _applyTypedHeight,
+                                      onEditingComplete: () =>
+                                          _applyTypedHeight(
+                                              _heightController.text),
                                     ),
                                     Text(
                                       'cm',
@@ -249,26 +285,42 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                           flex: 1,
                           child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Stack(
                               children: [
                                 // Ruler
                                 NotificationListener<ScrollNotification>(
                                   onNotification: (notification) {
-                                    if (notification is ScrollEndNotification) {
-                                      // Calculate the selected height based on the current scroll position
-                                      final offset = _scrollController.offset;
-                                      final height =
-                                          _maxHeight - (offset / _itemHeight);
-                                      final roundedHeight = double.parse(
-                                          height.toStringAsFixed(0));
+                                    // Actualiza el valor mostrado según el centro mientras se arrastra
+                                    final offset = _scrollController.offset;
+                                    final heightCentered =
+                                        _minHeight + (offset / _itemHeight);
+                                    final rounded = double.parse(
+                                        heightCentered.toStringAsFixed(0));
 
-                                      // Only update if the selected height has changed
-                                      if ((roundedHeight - _selectedHeight)
-                                              .abs() >
+                                    if (notification
+                                        is ScrollUpdateNotification) {
+                                      if ((rounded - _selectedHeight).abs() >
                                           0.01) {
                                         setState(() {
-                                          _selectedHeight = roundedHeight;
+                                          _selectedHeight = rounded;
+                                          _heightController.text =
+                                              rounded.toStringAsFixed(0);
                                         });
+                                      }
+                                    }
+
+                                    if (notification is ScrollEndNotification) {
+                                      // Snap al múltiplo más cercano cuando termina el scroll
+                                      final targetOffset =
+                                          (rounded - _minHeight) * _itemHeight;
+                                      if ((offset - targetOffset).abs() > 0.5) {
+                                        _scrollController.animateTo(
+                                          targetOffset,
+                                          duration:
+                                              const Duration(milliseconds: 220),
+                                          curve: Curves.easeOut,
+                                        );
                                       }
                                     }
                                     return true;
@@ -284,8 +336,10 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                         physics: const BouncingScrollPhysics(),
                                         itemBuilder: (context, index) {
                                           final height = _minHeight + index;
-                                          final showLabel = height % 5 ==
-                                              0; // Show label every 5 cm
+                                          final isMajor10 =
+                                              height % 10 == 0; // cada 10 cm
+                                          final isMid5 = height % 5 == 0 &&
+                                              !isMajor10; // cada 5 cm
 
                                           return GestureDetector(
                                             onTap: () => _selectHeight(height),
@@ -293,17 +347,25 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                               children: [
                                                 // Tick mark
                                                 Container(
-                                                  width: showLabel ? 35 : 20,
+                                                  width: isMajor10
+                                                      ? 40
+                                                      : isMid5
+                                                          ? 28
+                                                          : 16,
                                                   height: 2,
-                                                  color: showLabel
+                                                  color: isMajor10
                                                       ? Colors.white
-                                                          .withOpacity(0.8)
-                                                      : Colors.white
-                                                          .withOpacity(0.3),
+                                                          .withOpacity(0.9)
+                                                      : isMid5
+                                                          ? Colors.white
+                                                              .withOpacity(0.6)
+                                                          : Colors.white
+                                                              .withOpacity(
+                                                                  0.35),
                                                 ),
 
                                                 // Label
-                                                if (showLabel)
+                                                if (isMajor10)
                                                   Padding(
                                                     padding:
                                                         const EdgeInsets.only(
@@ -321,7 +383,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                                                 .primary
                                                             : Colors.white
                                                                 .withOpacity(
-                                                                    0.6),
+                                                                    0.7),
                                                         fontWeight:
                                                             (height - _selectedHeight)
                                                                         .abs() <
@@ -329,7 +391,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                                                 ? FontWeight
                                                                     .bold
                                                                 : FontWeight
-                                                                    .normal,
+                                                                    .w500,
                                                       ),
                                                     ),
                                                   ),
@@ -364,43 +426,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                                         ),
                                       ),
 
-                                      // Gradient shadows on top and bottom
-                                      Positioned(
-                                        left: 0,
-                                        right: 0,
-                                        top: 0,
-                                        height: 60,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [
-                                                Colors.black.withOpacity(0.8),
-                                                Colors.transparent,
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        height: 60,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.bottomCenter,
-                                              end: Alignment.topCenter,
-                                              colors: [
-                                                Colors.black.withOpacity(0.8),
-                                                Colors.transparent,
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                      // Sombras removidas
                                     ],
                                   ),
                                 ),

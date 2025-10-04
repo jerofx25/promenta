@@ -28,10 +28,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
   void initState() {
     super.initState();
     _selectedAge = OnboardingConstants.defaultAge;
-    _scrollController = ScrollController(
-      initialScrollOffset:
-          (_selectedAge - OnboardingConstants.minAge) * _itemWidth,
-    );
+    _scrollController = ScrollController();
 
     _animationController = AnimationController(
       vsync: this,
@@ -40,6 +37,9 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
 
     // Start animation after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // posicionar el ítem seleccionado en el centro considerando el padding
+      final index = _selectedAge - OnboardingConstants.minAge;
+      _scrollController.jumpTo(index * _itemWidth);
       _animationController.forward();
     });
   }
@@ -55,12 +55,12 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
     setState(() {
       _selectedAge = age;
     });
-
-    // Scroll to the selected age with animation
+    // Con padding simétrico, el offset del índice centrado es index * _itemWidth
+    final index = age - OnboardingConstants.minAge;
     _scrollController.animateTo(
-      (age - OnboardingConstants.minAge) * _itemWidth,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      index * _itemWidth,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
     );
   }
 
@@ -74,32 +74,14 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final double horizontalPagePadding =
+        24; // Debe coincidir con Padding del contenido
+    final double contentWidth = size.width - (horizontalPagePadding * 2);
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/g66f4ecb7d502497509b559223ca0013a81b02f30929c58668989243cc4b7400a87b89c4576ccc87a48d8eeb8bb9c5f5d74e50d83fee80e3efeae6c5094150f66_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Fondo limpio: sin imagen ni overlay
 
           // Content
           SafeArea(
@@ -187,20 +169,38 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
 
                   SizedBox(height: size.height * 0.06),
 
-                  // Age selector
+                  // Age selector (center-based selection)
                   Container(
                     height: 100,
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (notification) {
-                        if (notification is ScrollEndNotification) {
-                          // Calculate the selected age based on the current scroll position
-                          final offset = _scrollController.offset;
-                          final index = (offset / _itemWidth).round();
-                          final age = OnboardingConstants.minAge + index;
+                        // Con padding simétrico, cada índice corresponde a offset = index * _itemWidth
+                        final offset = _scrollController.offset;
+                        int liveIndex = (offset / _itemWidth).round();
+                        liveIndex = liveIndex.clamp(0, _totalItems - 1);
+                        final liveAge = OnboardingConstants.minAge + liveIndex;
 
-                          // Only update if the selected age has changed
-                          if (age != _selectedAge) {
-                            _selectAge(age);
+                        if (notification is ScrollUpdateNotification) {
+                          if (liveAge != _selectedAge) {
+                            setState(() {
+                              _selectedAge = liveAge;
+                            });
+                          }
+                        }
+
+                        if (notification is ScrollEndNotification) {
+                          final targetOffset = liveIndex * _itemWidth;
+                          if ((offset - targetOffset).abs() > 0.5) {
+                            _scrollController.animateTo(
+                              targetOffset,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOut,
+                            );
+                          }
+                          if (liveAge != _selectedAge) {
+                            setState(() {
+                              _selectedAge = liveAge;
+                            });
                           }
                         }
                         return true;
@@ -210,6 +210,10 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
                         scrollDirection: Axis.horizontal,
                         itemCount: _totalItems,
                         itemExtent: _itemExtent,
+                        padding: EdgeInsets.symmetric(
+                          // Centrar respecto al ancho útil del contenido (alineado con el círculo)
+                          horizontal: (contentWidth - _itemWidth) / 2,
+                        ),
                         physics: const BouncingScrollPhysics(),
                         itemBuilder: (context, index) {
                           final age = OnboardingConstants.minAge + index;

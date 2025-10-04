@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/back_button.dart';
 
 class TrainingGoalScreen extends StatefulWidget {
   const TrainingGoalScreen({Key? key}) : super(key: key);
@@ -115,19 +116,15 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
+                  SizedBox(height: 6),
+
                   // Back button
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: IconButton(
+                    child: BackButton(
                       onPressed: _handleBack,
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black38,
-                        padding: const EdgeInsets.all(12),
-                      ),
+                      icon: Icons.arrow_back_ios,
+                      color: Colors.white,
                     ),
                   )
                       .animate(controller: _animationController)

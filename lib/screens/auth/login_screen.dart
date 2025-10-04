@@ -6,8 +6,6 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/social_button.dart';
-import 'signup_screen.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -36,7 +34,9 @@ class _LoginScreenState extends State<LoginScreen>
     );
     // Start animation after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animationController.forward();
+      if (mounted) {
+        _animationController.forward();
+      }
     });
   }
 
@@ -131,28 +131,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/g1668d9395e4ed7ca8190288f607d6e0db08021276cca174fb9c4a5151c3874c5d41b19c2934d8883ba5aa5097ab3ec01d56db18666abe6e1d4f40def57f3606e_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Fondo limpio: sin imagen ni overlay
 
           // Content
           SafeArea(

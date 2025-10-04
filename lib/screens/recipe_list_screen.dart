@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../models/recipe.dart';
 import '../providers/recipe_provider.dart';
@@ -69,6 +71,13 @@ class _RecipeListScreenState extends State<RecipeListScreen>
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
+              keyboardType: TextInputType.number,
+              maxLength: 10, // Ejemplo: máximo 10 caracteres
+              maxLengthEnforcement:
+                  MaxLengthEnforcement.none, // Oculta el contador
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
               decoration: InputDecoration(
                 hintText: 'Buscar recetas...',
                 prefixIcon:
@@ -216,7 +225,7 @@ class _RecipeListScreenState extends State<RecipeListScreen>
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.65,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -233,12 +242,7 @@ class _RecipeListScreenState extends State<RecipeListScreen>
       onTap: () {
         Provider.of<RecipeProvider>(context, listen: false)
             .selectRecipe(recipe.id);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const RecipeDetailScreen(),
-          ),
-        );
+        context.pushNamed('recipe-detail');
       },
       child: Card(
         elevation: 0,
@@ -345,6 +349,7 @@ class _RecipeListScreenState extends State<RecipeListScreen>
                       recipe.name,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -356,7 +361,9 @@ class _RecipeListScreenState extends State<RecipeListScreen>
                         color: theme.colorScheme.secondary,
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     Row(
                       children: [
                         Icon(

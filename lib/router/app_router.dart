@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../main.dart';
 import '../providers/auth_provider.dart';
+import '../blocs/auth/auth_bloc.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/profile_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
-import '../screens/main_screen.dart';
 import '../screens/onboarding/age_selection_screen.dart';
 import '../screens/onboarding/height_selection_screen.dart';
 import '../screens/onboarding/weight_selection_screen.dart';
@@ -18,29 +19,42 @@ import '../screens/onboarding/dietary_preferences_screen.dart';
 import '../screens/onboarding/profile_photo_screen.dart';
 import '../screens/timer_screen.dart';
 import '../screens/progress_dashboard_screen.dart';
+import '../screens/recipe_list_screen.dart';
+import '../screens/recipe_detail_screen.dart';
 import 'router_notifier.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   refreshListenable: routerNotifier,
   redirect: (context, state) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final authStatus = authProvider.authStatus;
+    final authBloc = context.read<AuthBloc>();
+    final isAuthenticated = authBloc.state.authenticated;
     final currentLoc = state.subloc;
 
-    if (authStatus == AuthStatus.unauthenticated) {
-      if (currentLoc != '/login') return '/login';
+    // Onboarding se mantiene con AuthProvider mientras migramos gradualmente
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authStatus = authProvider.authStatus;
+
+    if (!isAuthenticated) {
+      // Permitir rutas públicas sin autenticación
+      const publicRoutes = ['/login', '/signup', '/forgot-password'];
+      if (!publicRoutes.contains(currentLoc)) return '/login';
       return null;
     }
 
     if (authStatus == AuthStatus.onboarding) {
+      final desired = '/onboarding/step${authProvider.onboardingStep}';
       if (!currentLoc.startsWith('/onboarding')) {
-        return '/onboarding/step${authProvider.onboardingStep}';
+        return desired;
+      }
+      // Si ya estamos en onboarding pero en un paso distinto, redirigir al paso correcto
+      if (currentLoc != desired) {
+        return desired;
       }
       return null;
     }
 
-    if (authStatus == AuthStatus.authenticated) {
+    if (isAuthenticated) {
       if (currentLoc == '/' ||
           currentLoc == '/login' ||
           currentLoc.startsWith('/onboarding')) {
@@ -61,12 +75,13 @@ final GoRouter appRouter = GoRouter(
       redirect: (context, state) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final authStatus = authProvider.authStatus;
+        final isAuthenticated = context.read<AuthBloc>().state.authenticated;
 
-        if (authStatus == AuthStatus.unauthenticated) {
+        if (!isAuthenticated) {
           return '/login';
         } else if (authStatus == AuthStatus.onboarding) {
           return '/onboarding/step${authProvider.onboardingStep}';
-        } else if (authStatus == AuthStatus.authenticated) {
+        } else if (isAuthenticated) {
           return '/home';
         }
         return null;
@@ -187,6 +202,24 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage(
         child: const ProgressDashboardScreen(),
         transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+
+    /// Rutas de Recetas
+    GoRoute(
+      path: '/recipes',
+      name: 'recipe-list',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const RecipeListScreen(),
+        transitionsBuilder: _slideLeftTransition,
+      ),
+    ),
+    GoRoute(
+      path: '/recipe-detail',
+      name: 'recipe-detail',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const RecipeDetailScreen(),
+        transitionsBuilder: _slideLeftTransition,
       ),
     ),
   ],

@@ -77,28 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/g80a7bbf472ceb5e38389a2ccc6e4ac449fd2714c523e61c6ba170103e78424a364dc16d77ef0443ec8dfd7ee71e4186826272e3782c5b2110e0822cb842c1744_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Fondo limpio: sin imagen ni overlay
 
           // Content
           SafeArea(
@@ -108,23 +87,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Back button
-                  IconButton(
-                    onPressed: _navigateBack,
-                    icon: Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                    ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black38,
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
 
                   SizedBox(height: size.height * 0.05),
 
                   // Header text
                   Text(
-                    'u00bfOlvidaste tu contraseu00f1a?',
+                    'Olvidaste tu contraseña?',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -137,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                   const SizedBox(height: 12),
 
                   Text(
-                    'Ingresa tu correo electru00f3nico y te enviaremos un enlace para restablecer tu contraseu00f1a',
+                    'Ingresa tu correo electronico y te enviaremos un enlace para restablecer tu contraseña',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white.withOpacity(0.8),
                     ),
@@ -160,12 +128,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             prefixIcon: Icons.email_outlined,
+                            hintText: 'Ingresa tu email',
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor, ingresa tu email';
                               }
                               if (!value.contains('@')) {
-                                return 'Por favor, ingresa un email vu00e1lido';
+                                return 'Por favor, ingresa un email valido';
                               }
                               return null;
                             },
@@ -212,7 +181,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'u00a1Enlace enviado!',
+                                'Enlace enviado!',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -222,7 +191,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Hemos enviado un enlace de restablecimiento a ${_emailController.text}. Por favor, revisa tu correo electru00f3nico.',
+                            'Hemos enviado un enlace de restablecimiento a ${_emailController.text}. Por favor, revisa tu correo electronico.',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Colors.white.withOpacity(0.9),
                             ),
@@ -246,7 +215,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                         color: theme.colorScheme.primary,
                       ),
                       label: Text(
-                        'Volver a inicio de sesiu00f3n',
+                        'Volver a inicio de sesion',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,

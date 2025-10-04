@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/back_button.dart';
 
 class WeightSelectionScreen extends StatefulWidget {
   const WeightSelectionScreen({Key? key}) : super(key: key);
@@ -155,27 +156,6 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
       body: Stack(
         children: [
           // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/gd6bb39fbc35678a86de626dbf7016d880f6815bfb46ff31c02127b115d179d755e7b3cade205a0a6e2fdeef5510809582f19d3b4de309507ba88db5e34b6d1b7_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
 
           // Content
           SafeArea(
@@ -199,26 +179,22 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
+                  SizedBox(height: 6),
+
                   // Back button
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: IconButton(
+                    child: BackButton(
                       onPressed: _handleBack,
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black38,
-                        padding: const EdgeInsets.all(12),
-                      ),
+                      icon: Icons.arrow_back_ios,
+                      color: Colors.white,
                     ),
                   )
                       .animate(controller: _animationController)
                       .fadeIn(duration: 400.ms)
                       .slideX(begin: -0.2, end: 0),
 
-                  SizedBox(height: size.height * 0.04),
+                  SizedBox(height: size.height * 0.02),
 
                   // Title
                   Column(
