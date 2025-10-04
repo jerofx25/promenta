@@ -196,42 +196,64 @@ class AuthProvider extends ChangeNotifier {
   void setAge(int age) {
     _userProfile = _userProfile!.copyWith(age: age);
     _saveUserToStorage();
+    // Persistir en Firestore
+    try {
+      _authService.updateUserFields({'age': age});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
   void setWeight(double weight) {
     _userProfile = _userProfile!.copyWith(weight: weight);
     _saveUserToStorage();
+    try {
+      _authService.updateUserFields({'weight': weight});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
   void setHeight(double height) {
     _userProfile = _userProfile!.copyWith(height: height);
     _saveUserToStorage();
+    try {
+      _authService.updateUserFields({'height': height});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
   void setTrainingLevel(String level) {
     _userProfile = _userProfile!.copyWith(trainingLevel: level);
     _saveUserToStorage();
+    try {
+      _authService.updateUserFields({'trainingLevel': level});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
   void setGoals(List<String> goals) {
     _userProfile = _userProfile!.copyWith(goals: goals);
     _saveUserToStorage();
+    try {
+      _authService.updateUserFields({'goals': goals});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
   void setInjuries(List<String> injuries) {
     _userProfile = _userProfile!.copyWith(injuries: injuries);
     _saveUserToStorage();
+    try {
+      _authService.updateUserFields({'injuries': injuries});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
   void setPhotoUrl(String photoUrl) {
     _userProfile = _userProfile!.copyWith(photoUrl: photoUrl);
     _saveUserToStorage();
+    try {
+      _authService.updateUserFields({'photoUrl': photoUrl});
+    } catch (_) {}
     _notifyAndUpdateRouter();
   }
 

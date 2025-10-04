@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
@@ -9,10 +10,8 @@ import 'dart:ui'; // Importar para ImageFilter
 import 'firebase_options.dart';
 import 'screens/fitness_tracker_screen.dart';
 import 'screens/rm_calculator_screen.dart';
-import 'screens/timer_screen.dart';
 import 'screens/workout_list_screen.dart';
 import 'screens/recipe_list_screen.dart';
-import 'screens/progress_dashboard_screen.dart';
 import 'utils/theme.dart';
 import 'providers/exercise_provider.dart';
 import 'providers/workout_provider.dart';
@@ -20,6 +19,10 @@ import 'providers/recipe_provider.dart';
 import 'providers/auth_provider.dart';
 import 'router/app_router.dart';
 import 'services/auth_service.dart';
+import 'repositories/auth_repository.dart';
+import 'repositories/firebase_auth_repository.dart';
+import 'blocs/auth/auth_bloc.dart';
+import 'router/router_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,18 +32,24 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   final authService = AuthService();
+  final authRepository = FirebaseAuthRepository(authService);
 
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthService>.value(value: authService),
+        Provider<AuthRepository>.value(value: authRepository),
         ChangeNotifierProvider(create: (_) => ExerciseProvider()),
         ChangeNotifierProvider(create: (_) => WorkoutProvider()),
         ChangeNotifierProvider(create: (_) => RecipeProvider()),
         ChangeNotifierProvider(
             create: (_) => AuthProvider(authService: authService)),
       ],
-      child: const MyApp(),
+      child: BlocProvider(
+        create: (context) =>
+            AuthBloc(authRepository: authRepository)..add(const AuthStarted()),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -50,13 +59,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'IA Entrenar',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: ThemeMode.dark,
-      routerConfig: appRouter,
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (prev, curr) => prev.authenticated != curr.authenticated,
+      listener: (context, state) {
+        routerNotifier.refresh();
+      },
+      child: MaterialApp.router(
+        title: 'IA Entrenar',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme(),
+        darkTheme: AppTheme.darkTheme(),
+        themeMode: ThemeMode.dark,
+        routerConfig: appRouter,
+      ),
     );
   }
 }
@@ -81,8 +96,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final mediaQueryPadding = MediaQuery.of(context).padding;
-    final double bottomPadding = mediaQueryPadding.bottom < 34 ? 8.0 : 0.0;
+    // final mediaQueryPadding = MediaQuery.of(context).padding;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(

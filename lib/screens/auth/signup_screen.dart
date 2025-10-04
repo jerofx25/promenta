@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/social_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -25,8 +24,8 @@ class _SignupScreenState extends State<SignupScreen>
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
-  bool _isAppleLoading = false;
+  // bool _isGoogleLoading = false;
+  // bool _isAppleLoading = false;
   late AnimationController _animationController;
 
   @override
@@ -153,63 +152,20 @@ class _SignupScreenState extends State<SignupScreen>
     }
   }
 
-  Future<void> _handleGoogleSignup() async {
-    setState(() => _isGoogleLoading = true);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.signInWithGoogle();
-    setState(() => _isGoogleLoading = false);
-
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al registrarse con Google.')),
-      );
-    }
-  }
-
-  Future<void> _handleAppleSignup() async {
-    setState(() => _isAppleLoading = true);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.signInWithApple();
-    setState(() => _isAppleLoading = false);
-
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al registrarse con Apple.')),
-      );
-    }
-  }
+  // Future<void> _handleGoogleSignup() async {}
+  // Future<void> _handleAppleSignup() async {}
 
   void _navigateBack() => context.goNamed('login');
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
+    // final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/gdd83f5d08de8479ea881b6c23d79d6322c9f907c2a5dd8c33c5e59ff0184e0c1b8ea85a08bfa06dc6c74130ee1828be0e89584305905b960c2ec8a651f5a1cc7_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Fondo limpio: sin imagen ni overlay
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -224,7 +180,8 @@ class _SignupScreenState extends State<SignupScreen>
                           const Icon(Icons.arrow_back_ios, color: Colors.white),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.black38,
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.only(left: 8),
+                        iconSize: 18,
                       ),
                     )
                         .animate(controller: _animationController)
@@ -245,6 +202,7 @@ class _SignupScreenState extends State<SignupScreen>
                     CustomTextField(
                       controller: _fullNameController,
                       label: 'Nombre Completo',
+                      hintText: 'Ingresa tu nombre completo',
                       prefixIcon: Icons.person_outline,
                       validator: _validateFullName,
                       textCapitalization: TextCapitalization.words,
@@ -256,6 +214,7 @@ class _SignupScreenState extends State<SignupScreen>
                     CustomTextField(
                       controller: _emailController,
                       label: 'Correo Electrónico',
+                      hintText: 'Ingresa tu correo electronico',
                       prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       validator: _validateEmail,
@@ -267,6 +226,7 @@ class _SignupScreenState extends State<SignupScreen>
                     CustomTextField(
                       controller: _phoneController,
                       label: 'Teléfono',
+                      hintText: 'Ingresa tu numero de telefono',
                       prefixIcon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                       validator: _validatePhone,
@@ -278,6 +238,7 @@ class _SignupScreenState extends State<SignupScreen>
                     CustomTextField(
                       controller: _passwordController,
                       label: 'Contraseña',
+                      hintText: 'Ingresa tu contraseña',
                       prefixIcon: Icons.lock_outline,
                       obscureText: !_isPasswordVisible,
                       validator: _validatePassword,
@@ -302,6 +263,7 @@ class _SignupScreenState extends State<SignupScreen>
                     CustomTextField(
                       controller: _confirmPasswordController,
                       label: 'Confirmar Contraseña',
+                      hintText: 'Ingresa tu contraseña',
                       prefixIcon: Icons.lock_outline,
                       obscureText: !_isConfirmPasswordVisible,
                       validator: _validateConfirmPassword,
