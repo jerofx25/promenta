@@ -3,18 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 ThemeData get lightTheme => ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.light(
-        primary: const Color(0xFF6F61EF),
-        secondary: const Color(0xFF39D2C0),
-        tertiary: const Color(0xFFEE8B60),
-        surface: const Color(0xFFF1F4F8),
-        error: const Color(0xFFFF5963),
-        onPrimary: const Color(0xFFFFFFFF),
-        onSecondary: const Color(0xFF15161E),
-        onTertiary: const Color(0xFF15161E),
-        onSurface: const Color(0xFF15161E),
-        onError: const Color(0xFFFFFFFF),
-        outline: const Color(0xFFB0BEC5),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF6F61EF),
+        secondary: Color(0xFF39D2C0),
+        tertiary: Color(0xFFEE8B60),
+        surface: Color(0xFFF1F4F8),
+        error: Color(0xFFFF5963),
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFF15161E),
+        onTertiary: Color(0xFF15161E),
+        onSurface: Color(0xFF15161E),
+        onError: Color(0xFFFFFFFF),
+        outline: Color(0xFFB0BEC5),
       ),
       brightness: Brightness.light,
       textTheme: TextTheme(
@@ -83,18 +83,18 @@ ThemeData get lightTheme => ThemeData(
 
 ThemeData get darkTheme => ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.dark(
-        primary: const Color(0xFF6F61EF),
-        secondary: const Color(0xFF39D2C0),
-        tertiary: const Color(0xFFEE8B60),
-        surface: const Color(0xFF15161E),
-        error: const Color(0xFFFF5963),
-        onPrimary: const Color(0xFFFFFFFF),
-        onSecondary: const Color(0xFFE5E7EB),
-        onTertiary: const Color(0xFFE5E7EB),
-        onSurface: const Color(0xFFE5E7EB),
-        onError: const Color(0xFFFFFFFF),
-        outline: const Color(0xFF37474F),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF6F61EF),
+        secondary: Color(0xFF39D2C0),
+        tertiary: Color(0xFFEE8B60),
+        surface: Color(0xFF15161E),
+        error: Color(0xFFFF5963),
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFFE5E7EB),
+        onTertiary: Color(0xFFE5E7EB),
+        onSurface: Color(0xFFE5E7EB),
+        onError: Color(0xFFFFFFFF),
+        outline: Color(0xFF37474F),
       ),
       brightness: Brightness.dark,
       textTheme: TextTheme(

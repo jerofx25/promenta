@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../main.dart';
 import '../providers/auth_provider.dart';
@@ -91,24 +90,24 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/login',
       name: 'login',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const LoginScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: LoginScreen(),
         transitionsBuilder: _fadeTransition,
       ),
     ),
     GoRoute(
       path: '/signup',
       name: 'signup',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const SignupScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: SignupScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/forgot-password',
       name: 'forgot-password',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const ForgotPasswordScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: ForgotPasswordScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
@@ -124,56 +123,56 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/step0',
       name: 'onboarding-step0',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const AgeSelectionScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: AgeSelectionScreen(),
         transitionsBuilder: _fadeTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step1',
       name: 'onboarding-step1',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const HeightSelectionScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: HeightSelectionScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step2',
       name: 'onboarding-step2',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const WeightSelectionScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: WeightSelectionScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step3',
       name: 'onboarding-step3',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const InjuriesScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: InjuriesScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step4',
       name: 'onboarding-step4',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const TrainingGoalScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: TrainingGoalScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step5',
       name: 'onboarding-step5',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const DietaryPreferencesScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: DietaryPreferencesScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step6',
       name: 'onboarding-step6',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const ProfilePhotoScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: ProfilePhotoScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
@@ -189,8 +188,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/timer',
       name: 'timer',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const TimerScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: TimerScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
@@ -199,8 +198,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/progress',
       name: 'progress',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const ProgressDashboardScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: ProgressDashboardScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
@@ -209,16 +208,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/recipes',
       name: 'recipe-list',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const RecipeListScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: RecipeListScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/recipe-detail',
       name: 'recipe-detail',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const RecipeDetailScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: RecipeDetailScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),

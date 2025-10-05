@@ -6,7 +6,7 @@ import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 
 class AgeSelectionScreen extends StatefulWidget {
-  const AgeSelectionScreen({Key? key}) : super(key: key);
+  const AgeSelectionScreen({super.key});
 
   @override
   State<AgeSelectionScreen> createState() => _AgeSelectionScreenState();
@@ -74,7 +74,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final double horizontalPagePadding =
+    const double horizontalPagePadding =
         24; // Debe coincidir con Padding del contenido
     final double contentWidth = size.width - (horizontalPagePadding * 2);
 
@@ -170,7 +170,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen>
                   SizedBox(height: size.height * 0.06),
 
                   // Age selector (center-based selection)
-                  Container(
+                  SizedBox(
                     height: 100,
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (notification) {

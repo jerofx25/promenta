@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../utils/theme.dart';
 
 enum TimerMode { stopwatch, countdown, interval }
 
 class TimerScreen extends StatefulWidget {
-  const TimerScreen({Key? key}) : super(key: key);
+  const TimerScreen({super.key});
 
   @override
   _TimerScreenState createState() => _TimerScreenState();
@@ -23,9 +22,9 @@ class _TimerScreenState extends State<TimerScreen>
   // Countdown variables
   int _countdownTime = 60; // Seconds
   int _remainingTime = 60;
-  TextEditingController _countdownMinutesController =
+  final TextEditingController _countdownMinutesController =
       TextEditingController(text: '1');
-  TextEditingController _countdownSecondsController =
+  final TextEditingController _countdownSecondsController =
       TextEditingController(text: '0');
 
   // Interval variables
@@ -34,9 +33,9 @@ class _TimerScreenState extends State<TimerScreen>
   int _intervals = 5;
   int _currentInterval = 0;
   bool _isWorkPeriod = true;
-  TextEditingController _workTimeController = TextEditingController(text: '30');
-  TextEditingController _restTimeController = TextEditingController(text: '10');
-  TextEditingController _intervalsController = TextEditingController(text: '5');
+  final TextEditingController _workTimeController = TextEditingController(text: '30');
+  final TextEditingController _restTimeController = TextEditingController(text: '10');
+  final TextEditingController _intervalsController = TextEditingController(text: '5');
 
   // Animation
   late AnimationController _animationController;
@@ -251,7 +250,7 @@ class _TimerScreenState extends State<TimerScreen>
                 _formatTime(_elapsedMilliseconds),
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 255, 255, 255),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                 ),
               ),
             ),
@@ -344,7 +343,7 @@ class _TimerScreenState extends State<TimerScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
+              SizedBox(
                 width: 60,
                 child: TextField(
                   controller: _countdownMinutesController,
@@ -364,7 +363,7 @@ class _TimerScreenState extends State<TimerScreen>
                 style: theme.textTheme.headlineMedium,
               ),
               const SizedBox(width: 16),
-              Container(
+              SizedBox(
                 width: 60,
                 child: TextField(
                   controller: _countdownSecondsController,
@@ -501,7 +500,7 @@ class _TimerScreenState extends State<TimerScreen>
             children: [
               Column(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 70,
                     child: TextField(
                       controller: _workTimeController,
@@ -526,7 +525,7 @@ class _TimerScreenState extends State<TimerScreen>
               const SizedBox(width: 16),
               Column(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 70,
                     child: TextField(
                       controller: _restTimeController,
@@ -551,7 +550,7 @@ class _TimerScreenState extends State<TimerScreen>
               const SizedBox(width: 16),
               Column(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 70,
                     child: TextField(
                       controller: _intervalsController,
@@ -622,7 +621,7 @@ class _TimerScreenState extends State<TimerScreen>
   }) {
     return Column(
       children: [
-        Container(
+        SizedBox(
           height: large ? 80 : 60,
           width: large ? 80 : 60,
           child: ElevatedButton(
@@ -685,12 +684,12 @@ class _TimerScreenState extends State<TimerScreen>
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.background,
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
                           color:
-                              theme.colorScheme.onBackground.withOpacity(0.05),
+                              theme.colorScheme.onSurface.withOpacity(0.05),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -773,7 +772,7 @@ class _TimerScreenState extends State<TimerScreen>
               icon,
               color: isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onBackground.withOpacity(0.6),
+                  : theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             const SizedBox(height: 4),
             Text(
@@ -781,7 +780,7 @@ class _TimerScreenState extends State<TimerScreen>
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onBackground.withOpacity(0.6),
+                    : theme.colorScheme.onSurface.withOpacity(0.6),
                 fontWeight: isSelected ? FontWeight.bold : null,
               ),
             ),

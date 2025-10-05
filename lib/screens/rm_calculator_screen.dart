@@ -4,10 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import '../providers/exercise_provider.dart';
 import '../models/exercise.dart';
-import '../utils/theme.dart';
 
 class RMCalculatorScreen extends StatefulWidget {
-  const RMCalculatorScreen({Key? key}) : super(key: key);
+  const RMCalculatorScreen({super.key});
 
   @override
   _RMCalculatorScreenState createState() => _RMCalculatorScreenState();
@@ -546,14 +545,14 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                   Icon(
                     Icons.show_chart,
                     size: 48,
-                    color: theme.colorScheme.onBackground.withOpacity(0.3),
+                    color: theme.colorScheme.onSurface.withOpacity(0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No hay suficientes datos para mostrar la gráfica',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onBackground.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -916,7 +915,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
               icon,
               color: selected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onBackground.withOpacity(0.6),
+                  : theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             const SizedBox(width: 16),
             Expanded(

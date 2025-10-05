@@ -2,12 +2,11 @@ import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/back_button.dart';
 
 class WeightSelectionScreen extends StatefulWidget {
-  const WeightSelectionScreen({Key? key}) : super(key: key);
+  const WeightSelectionScreen({super.key});
 
   @override
   State<WeightSelectionScreen> createState() => _WeightSelectionScreenState();
@@ -179,7 +178,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   // Back button
                   Align(
@@ -283,7 +282,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                   SizedBox(height: size.height * 0.06),
 
                   // Weight ruler
-                  Container(
+                  SizedBox(
                     height: 120,
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (notification) {

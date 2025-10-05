@@ -2,12 +2,11 @@ import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/back_button.dart';
 
 class DietaryPreferencesScreen extends StatefulWidget {
-  const DietaryPreferencesScreen({Key? key}) : super(key: key);
+  const DietaryPreferencesScreen({super.key});
 
   @override
   State<DietaryPreferencesScreen> createState() =>
@@ -101,7 +100,7 @@ class _DietaryPreferencesScreenState extends State<DietaryPreferencesScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   // Back button
                   Align(

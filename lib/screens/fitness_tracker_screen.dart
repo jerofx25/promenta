@@ -3,15 +3,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
 import '../utils/theme.dart';
-import '../widgets/progress_pie_chart.dart';
 import '../widgets/stacked_column_chart.dart';
 import '../widgets/radar_chart.dart';
 import 'package:draggable_fab/draggable_fab.dart';
-import '../screens/timer_screen.dart';
-import '../screens/progress_dashboard_screen.dart';
 
 class FitnessTrackerScreen extends StatefulWidget {
-  const FitnessTrackerScreen({Key? key}) : super(key: key);
+  const FitnessTrackerScreen({super.key});
 
   @override
   _FitnessTrackerScreenState createState() => _FitnessTrackerScreenState();
@@ -214,7 +211,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
               Text(
                 DateTime.now().toString().substring(0, 10),
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
             ],
@@ -237,7 +234,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -384,7 +381,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                 Text(
                   unit,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -452,12 +449,12 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                         });
                       }
                     },
-                    backgroundColor: theme.colorScheme.background,
+                    backgroundColor: theme.colorScheme.surface,
                     selectedColor: theme.colorScheme.primary.withOpacity(0.1),
                     labelStyle: TextStyle(
                       color: _selectedTimeFilter == filter
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.onBackground.withOpacity(0.7),
+                          : theme.colorScheme.onSurface.withOpacity(0.7),
                       fontWeight: _selectedTimeFilter == filter
                           ? FontWeight.bold
                           : null,
@@ -624,7 +621,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
       height: 300,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -717,7 +714,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -740,7 +737,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
           Text(
             'Análisis de tus habilidades físicas actuales',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -767,7 +764,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -788,7 +785,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                   color: AppTheme.moveRingColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.spa,
                   color: AppTheme.moveRingColor,
                   size: 16,
@@ -846,7 +843,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -867,7 +864,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                   color: AppTheme.exerciseRingColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.battery_charging_full,
                   color: AppTheme.exerciseRingColor,
                   size: 16,
@@ -911,7 +908,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                         '/100',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color:
-                              theme.colorScheme.onBackground.withOpacity(0.6),
+                              theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                     ),
@@ -941,7 +938,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -962,7 +959,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                   color: AppTheme.standRingColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.nightlight_round,
                   color: AppTheme.standRingColor,
                   size: 16,
@@ -981,7 +978,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
           AnimatedBuilder(
             animation: _progressAnimation,
             builder: (context, child) {
-              return Container(
+              return SizedBox(
                 height: 65,
                 child: BarChart(
                   BarChartData(
@@ -1085,7 +1082,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -1106,7 +1103,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                   color: AppTheme.moveRingColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.favorite,
                   color: AppTheme.moveRingColor,
                   size: 16,
@@ -1233,7 +1230,7 @@ class ActivityRingsPainter extends CustomPainter {
   void _drawRing(Canvas canvas, Offset center, double radius,
       double strokeWidth, Color color, double progress) {
     final rect = Rect.fromCircle(center: center, radius: radius);
-    final startAngle = -math.pi / 2;
+    const startAngle = -math.pi / 2;
     final sweepAngle = 2 * math.pi * progress;
 
     final paint = Paint()

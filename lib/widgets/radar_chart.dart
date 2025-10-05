@@ -1,6 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 import '../utils/theme.dart';
 
 class FitnessRadarChart extends StatelessWidget {
@@ -8,10 +7,10 @@ class FitnessRadarChart extends StatelessWidget {
   final double maxValue;
 
   const FitnessRadarChart({
-    Key? key,
+    super.key,
     required this.fitnessAttributes,
     this.maxValue = 10.0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +31,10 @@ class FitnessRadarChart extends StatelessWidget {
           titlePositionPercentageOffset: 0.2,
           tickCount: 5,
           ticksTextStyle: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onBackground.withOpacity(0.5),
+            color: theme.colorScheme.onSurface.withOpacity(0.5),
           ),
           gridBorderData: BorderSide(
-            color: theme.colorScheme.onBackground.withOpacity(0.2),
+            color: theme.colorScheme.onSurface.withOpacity(0.2),
             width: 1,
           ),
           getTitle: (index, angle) {
@@ -46,7 +45,7 @@ class FitnessRadarChart extends StatelessWidget {
             );
           },
           titleTextStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onBackground.withOpacity(0.9),
+            color: theme.colorScheme.onSurface.withOpacity(0.9),
             fontWeight: FontWeight.bold,
           ),
         ),

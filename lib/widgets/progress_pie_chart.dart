@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mrx_charts/mrx_charts.dart';
 import '../utils/theme.dart';
 
 class ProgressPieChart extends StatelessWidget {
@@ -11,14 +10,14 @@ class ProgressPieChart extends StatelessWidget {
   final double size;
   
   const ProgressPieChart({
-    Key? key,
+    super.key,
     required this.progress,
     required this.total,
     required this.color,
     this.centerWidget,
     this.title,
     this.size = 120,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class ProgressPieChart extends StatelessWidget {
           Text(
             title!,
             style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(0.8),
+              color: theme.colorScheme.onSurface.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 8),
@@ -46,7 +45,7 @@ class ProgressPieChart extends StatelessWidget {
               CustomPaint(
                 size: Size(size, size),
                 painter: CircularProgressPainter(
-                  backgroundColor: theme.colorScheme.onBackground.withOpacity(0.1),
+                  backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
                   valueColor: color,
                   value: percentage,
                   strokeWidth: 16,
@@ -70,11 +69,11 @@ class RecoveryScoreWidget extends StatelessWidget {
   final double size;
   
   const RecoveryScoreWidget({
-    Key? key,
+    super.key,
     required this.score,
     this.maxScore = 100.0,
     this.size = 120.0,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -104,13 +103,13 @@ class RecoveryScoreWidget extends StatelessWidget {
             score.toInt().toString(),
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onBackground,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           Text(
             '/100',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
         ],
@@ -128,14 +127,14 @@ class ActivityRingPieChart extends StatelessWidget {
   final double size;
   
   const ActivityRingPieChart({
-    Key? key,
+    super.key,
     required this.title,
     required this.current,
     required this.target,
     required this.color,
     required this.unit,
     this.size = 100.0,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -182,13 +181,13 @@ class ActivityRingPieChart extends StatelessWidget {
                   current.toInt().toString(),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onBackground,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   unit,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -198,7 +197,7 @@ class ActivityRingPieChart extends StatelessWidget {
           Text(
             '${(progress * 100).toInt()}% completado',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
         ],

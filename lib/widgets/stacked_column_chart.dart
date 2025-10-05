@@ -6,15 +6,15 @@ class WorkoutStackedColumnChart extends StatelessWidget {
   final List<StackedWorkoutData> workoutData;
 
   const WorkoutStackedColumnChart({
-    Key? key,
+    super.key,
     required this.workoutData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.bodySmall?.copyWith(
-      color: theme.colorScheme.onBackground.withOpacity(0.6),
+      color: theme.colorScheme.onSurface.withOpacity(0.6),
       fontWeight: FontWeight.normal,
     );
 
@@ -34,7 +34,7 @@ class WorkoutStackedColumnChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
-                          value.toInt().toString() + 'min',
+                          '${value.toInt()}min',
                           style: titleStyle,
                         ),
                       );
@@ -70,7 +70,7 @@ class WorkoutStackedColumnChart extends StatelessWidget {
               show: true,
               drawVerticalLine: false,
               getDrawingHorizontalLine: (value) => FlLine(
-                color: theme.colorScheme.onBackground.withOpacity(0.1),
+                color: theme.colorScheme.onSurface.withOpacity(0.1),
                 strokeWidth: 1,
                 dashArray: [5, 5],
               ),

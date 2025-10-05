@@ -8,7 +8,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/back_button.dart';
 
 class HeightSelectionScreen extends StatefulWidget {
-  const HeightSelectionScreen({Key? key}) : super(key: key);
+  const HeightSelectionScreen({super.key});
 
   @override
   State<HeightSelectionScreen> createState() => _HeightSelectionScreenState();
@@ -159,7 +159,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   // Back button
                   Align(

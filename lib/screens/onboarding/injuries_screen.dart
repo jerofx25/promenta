@@ -7,7 +7,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/back_button.dart';
 
 class InjuriesScreen extends StatefulWidget {
-  const InjuriesScreen({Key? key}) : super(key: key);
+  const InjuriesScreen({super.key});
 
   @override
   State<InjuriesScreen> createState() => _InjuriesScreenState();
@@ -117,7 +117,7 @@ class _InjuriesScreenState extends State<InjuriesScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   // Back button
                   Align(
@@ -272,7 +272,7 @@ class _InjuriesScreenState extends State<InjuriesScreen>
                       ),
                     ),
                     child: isSelected
-                        ? Icon(
+                        ? const Icon(
                             Icons.check,
                             size: 16,
                             color: Colors.white,
