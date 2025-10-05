@@ -10,14 +10,14 @@ class SocialButton extends StatelessWidget {
   final bool isLoading;
 
   const SocialButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     required this.icon,
     required this.backgroundColor,
     required this.textColor,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/workout.dart';
 import '../providers/workout_provider.dart';
-import '../utils/theme.dart';
 
 class WorkoutDetailScreen extends StatefulWidget {
-  const WorkoutDetailScreen({Key? key}) : super(key: key);
+  const WorkoutDetailScreen({super.key});
 
   @override
   _WorkoutDetailScreenState createState() => _WorkoutDetailScreenState();
@@ -463,8 +462,6 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen>
         return Colors.orange;
       case DifficultyLevel.elite:
         return Colors.red;
-      default:
-        return theme.colorScheme.primary;
     }
   }
 
@@ -480,8 +477,6 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen>
         return Colors.orange;
       case WorkoutType.bodybuilding:
         return Colors.teal;
-      default:
-        return theme.colorScheme.primary;
     }
   }
 }

@@ -4,14 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../models/recipe.dart';
 import '../providers/recipe_provider.dart';
-import 'recipe_detail_screen.dart';
-import '../utils/theme.dart';
 
 class RecipeListScreen extends StatefulWidget {
-  const RecipeListScreen({Key? key}) : super(key: key);
+  const RecipeListScreen({super.key});
 
   @override
-  _RecipeListScreenState createState() => _RecipeListScreenState();
+  State<RecipeListScreen> createState() => _RecipeListScreenState();
 }
 
 class _RecipeListScreenState extends State<RecipeListScreen>
@@ -398,8 +396,6 @@ class _RecipeListScreenState extends State<RecipeListScreen>
         return Colors.purple;
       case MealType.dinner:
         return Colors.blue;
-      default:
-        return theme.colorScheme.primary;
     }
   }
 }

@@ -7,7 +7,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/back_button.dart';
 
 class TrainingGoalScreen extends StatefulWidget {
-  const TrainingGoalScreen({Key? key}) : super(key: key);
+  const TrainingGoalScreen({super.key});
 
   @override
   State<TrainingGoalScreen> createState() => _TrainingGoalScreenState();
@@ -116,7 +116,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   // Back button
                   Align(
@@ -344,7 +344,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                     color: theme.colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check,
                     color: Colors.white,
                     size: 16,
@@ -417,7 +417,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                     color: theme.colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check,
                     color: Colors.white,
                     size: 16,

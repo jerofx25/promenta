@@ -7,7 +7,7 @@ import '../widgets/stacked_column_chart.dart';
 import '../widgets/radar_chart.dart';
 
 class ProgressDashboardScreen extends StatefulWidget {
-  const ProgressDashboardScreen({Key? key}) : super(key: key);
+  const ProgressDashboardScreen({super.key});
 
   @override
   State<ProgressDashboardScreen> createState() =>
@@ -32,14 +32,14 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen>
 
   // Heart rate data
   final List<FlSpot> _heartRateData = [
-    FlSpot(0, 72),
-    FlSpot(1, 74),
-    FlSpot(2, 95),
-    FlSpot(3, 120),
-    FlSpot(4, 110),
-    FlSpot(5, 89),
-    FlSpot(6, 75),
-    FlSpot(7, 70),
+    const FlSpot(0, 72),
+    const FlSpot(1, 74),
+    const FlSpot(2, 95),
+    const FlSpot(3, 120),
+    const FlSpot(4, 110),
+    const FlSpot(5, 89),
+    const FlSpot(6, 75),
+    const FlSpot(7, 70),
   ];
 
   // Upcoming workouts
@@ -194,7 +194,7 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen>
   }
 
   Widget _buildActivityStats() {
-    return Container(
+    return SizedBox(
       height: 170,
       child: ListView(
         scrollDirection: Axis.horizontal,
@@ -858,7 +858,7 @@ class _ProgressDashboardScreenState extends State<ProgressDashboardScreen>
           ),
         ),
         const SizedBox(height: 8),
-        Container(
+        SizedBox(
           height: 170,
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1045,7 +1045,7 @@ class ActivityRingsPainter extends CustomPainter {
   void _drawRing(Canvas canvas, Offset center, double radius,
       double strokeWidth, Color color, double progress) {
     final rect = Rect.fromCircle(center: center, radius: radius);
-    final startAngle = -math.pi / 2;
+    const startAngle = -math.pi / 2;
     final sweepAngle = 2 * math.pi * progress;
 
     final paint = Paint()

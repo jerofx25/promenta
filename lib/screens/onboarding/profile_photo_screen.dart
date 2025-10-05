@@ -6,7 +6,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/back_button.dart';
 
 class ProfilePhotoScreen extends StatefulWidget {
-  const ProfilePhotoScreen({Key? key}) : super(key: key);
+  const ProfilePhotoScreen({super.key});
 
   @override
   State<ProfilePhotoScreen> createState() => _ProfilePhotoScreenState();
@@ -139,7 +139,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
                         .slideX(begin: -0.1, end: 0);
                   }),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   // Back button
                   Align(

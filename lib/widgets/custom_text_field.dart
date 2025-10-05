@@ -13,7 +13,7 @@ class CustomTextField extends StatefulWidget {
   final TextCapitalization textCapitalization;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.label,
     this.hintText,
     required this.controller,
@@ -23,7 +23,7 @@ class CustomTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.textCapitalization = TextCapitalization.none,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -67,7 +67,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           style: theme.textTheme.bodyMedium?.copyWith(
             color: _isFocused
                 ? colorScheme.primary
-                : colorScheme.onBackground.withOpacity(0.7),
+                : colorScheme.onSurface.withOpacity(0.7),
             fontWeight: FontWeight.w500,
           ),
         )
@@ -86,12 +86,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
           validator: widget.validator,
           textCapitalization: widget.textCapitalization,
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: colorScheme.onBackground,
+            color: colorScheme.onSurface,
           ),
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onBackground.withOpacity(0.4),
+              color: colorScheme.onSurface.withOpacity(0.4),
             ),
             filled: true,
             fillColor: _isFocused
@@ -102,7 +102,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     widget.prefixIcon,
                     color: _isFocused
                         ? colorScheme.primary
-                        : colorScheme.onBackground.withOpacity(0.6),
+                        : colorScheme.onSurface.withOpacity(0.6),
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
@@ -113,7 +113,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: colorScheme.onBackground.withOpacity(0.1),
+                color: colorScheme.onSurface.withOpacity(0.1),
                 width: 1,
               ),
             ),

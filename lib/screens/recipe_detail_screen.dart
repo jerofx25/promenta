@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/recipe.dart';
 import '../providers/recipe_provider.dart';
-import '../utils/theme.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
-  const RecipeDetailScreen({Key? key}) : super(key: key);
+  const RecipeDetailScreen({super.key});
 
   @override
   _RecipeDetailScreenState createState() => _RecipeDetailScreenState();
