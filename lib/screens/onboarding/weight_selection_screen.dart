@@ -379,7 +379,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
-                                    Colors.black.withOpacity(0.7),
+                                    Colors.black.withOpacity(0),
                                     Colors.transparent,
                                   ],
                                 ),
@@ -397,7 +397,7 @@ class _WeightSelectionScreenState extends State<WeightSelectionScreen>
                                   begin: Alignment.centerRight,
                                   end: Alignment.centerLeft,
                                   colors: [
-                                    Colors.black.withOpacity(0.7),
+                                    Colors.black.withOpacity(0),
                                     Colors.transparent,
                                   ],
                                 ),
