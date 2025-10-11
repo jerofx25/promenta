@@ -192,69 +192,66 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Onboarding setters
-  void setAge(int age) {
-    _userProfile = _userProfile!.copyWith(age: age);
+  // Update user fields
+  void _updateUserFields(Map<String, dynamic> fields) {
+    _userProfile = _userProfile!.copyWith(
+      age: fields['age'],
+      weight: fields['weight'],
+      height: fields['height'],
+      trainingLevel: fields['trainingLevel'],
+      goals: fields['goals'],
+      injuries: fields['injuries'],
+      photoUrl: fields['photoUrl'],
+    );
     _saveUserToStorage();
-    // Persistir en Firestore
     try {
-      _authService.updateUserFields({'age': age});
+      _authService.updateUserFields(fields);
     } catch (_) {}
     _notifyAndUpdateRouter();
   }
 
+  // Onboarding setters
+  void setAge(int age) {
+    if(_userProfile?.age == null){
+      _updateUserFields({'age': age});
+    }
+  }
+
+
   void setWeight(double weight) {
-    _userProfile = _userProfile!.copyWith(weight: weight);
-    _saveUserToStorage();
-    try {
-      _authService.updateUserFields({'weight': weight});
-    } catch (_) {}
-    _notifyAndUpdateRouter();
+    if(_userProfile?.weight == null){
+      _updateUserFields({'weight': weight});
+    }
   }
 
   void setHeight(double height) {
-    _userProfile = _userProfile!.copyWith(height: height);
-    _saveUserToStorage();
-    try {
-      _authService.updateUserFields({'height': height});
-    } catch (_) {}
-    _notifyAndUpdateRouter();
+    if(_userProfile?.height == null){
+      _updateUserFields({'height': height});
+    }
   }
 
   void setTrainingLevel(String level) {
-    _userProfile = _userProfile!.copyWith(trainingLevel: level);
-    _saveUserToStorage();
-    try {
-      _authService.updateUserFields({'trainingLevel': level});
-    } catch (_) {}
-    _notifyAndUpdateRouter();
+    if(_userProfile?.trainingLevel == null){
+      _updateUserFields({'trainingLevel': level});
+    }
   }
 
   void setGoals(List<String> goals) {
-    _userProfile = _userProfile!.copyWith(goals: goals);
-    _saveUserToStorage();
-    try {
-      _authService.updateUserFields({'goals': goals});
-    } catch (_) {}
-    _notifyAndUpdateRouter();
+    if(_userProfile?.goals == null){
+      _updateUserFields({'goals': goals});
+    }
   }
 
   void setInjuries(List<String> injuries) {
-    _userProfile = _userProfile!.copyWith(injuries: injuries);
-    _saveUserToStorage();
-    try {
-      _authService.updateUserFields({'injuries': injuries});
-    } catch (_) {}
-    _notifyAndUpdateRouter();
+    if(_userProfile?.injuries == null){
+      _updateUserFields({'injuries': injuries});
+    }
   }
 
   void setPhotoUrl(String photoUrl) {
-    _userProfile = _userProfile!.copyWith(photoUrl: photoUrl);
-    _saveUserToStorage();
-    try {
-      _authService.updateUserFields({'photoUrl': photoUrl});
-    } catch (_) {}
-    _notifyAndUpdateRouter();
+    if(_userProfile?.photoUrl == null){
+      _updateUserFields({'photoUrl': photoUrl});
+    }
   }
 
   void nextOnboardingStep() {
