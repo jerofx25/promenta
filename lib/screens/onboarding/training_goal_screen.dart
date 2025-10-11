@@ -71,13 +71,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/gb79dd88e05560b3d0c9589d352adae2babae0835e735536f7305dfdbb51f6445026ea74d85fc27f6a9cb99e49e9bb877e6fc9cf48d3fb44a427f185fbfb4b133_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
+
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(

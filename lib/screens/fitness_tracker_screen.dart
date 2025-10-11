@@ -1,6 +1,8 @@
+import 'package:IAEntrenar/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../utils/theme.dart';
 import '../widgets/stacked_column_chart.dart';
@@ -193,6 +195,9 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
   }
 
   Widget _buildHeader(ThemeData theme) {
+
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -202,7 +207,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '¡Hola, Fabian!',
+                '¡Hola, ${authProvider.userProfile?.displayName}!',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

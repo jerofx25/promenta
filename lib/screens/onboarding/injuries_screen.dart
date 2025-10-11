@@ -72,13 +72,6 @@ class _InjuriesScreenState extends State<InjuriesScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/gee5fd118df2e121a9c8ba4d5732882d340bf164b33040a2fe4d11dee9d1cb75e306fcee90957906c04a95def34cd42603101f91e37918c32216dc124c1caa794_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
