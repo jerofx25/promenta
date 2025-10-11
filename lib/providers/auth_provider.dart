@@ -49,8 +49,6 @@ class AuthProvider extends ChangeNotifier {
         email: user.email ?? '',
       );
 
-      print("${_userProfile?.displayName}");
-
 
       // Verificar si el usuario necesita completar el onboarding
       if (_userProfile!.age != null &&
