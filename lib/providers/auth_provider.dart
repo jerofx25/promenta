@@ -49,6 +49,7 @@ class AuthProvider extends ChangeNotifier {
         email: user.email ?? '',
       );
 
+
       // Verificar si el usuario necesita completar el onboarding
       if (_userProfile!.age != null &&
           _userProfile!.weight != null &&
@@ -65,6 +66,7 @@ class AuthProvider extends ChangeNotifier {
       _authStatus = AuthStatus.unauthenticated;
       _notifyAndUpdateRouter();
     }
+
   }
 
   get profileImage => null;
@@ -216,7 +218,6 @@ class AuthProvider extends ChangeNotifier {
       _updateUserFields({'age': age});
     }
   }
-
 
   void setWeight(double weight) {
     if(_userProfile?.weight == null){

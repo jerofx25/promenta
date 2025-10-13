@@ -55,13 +55,7 @@ class _DietaryPreferencesScreenState extends State<DietaryPreferencesScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background image with gradient overlay
-          Positioned.fill(
-            child: Image.network(
-              "https://pixabay.com/get/g842eb985ae1233fbe19c2227f4426c4603dc669f08bc2e9ac82e9e25a4700472597b669ff11df9b6cef09f421d1eb950da90f7f250cf0248df7050e7877eb70e_1280.jpg",
-              fit: BoxFit.cover,
-            ),
-          ),
+
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -129,7 +123,7 @@ class _DietaryPreferencesScreenState extends State<DietaryPreferencesScreen>
                       .fadeIn(duration: 500.ms, delay: 100.ms)
                       .slideY(begin: 0.2, end: 0),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
                   Text(
                     'Estamos preparando tu plan personalizado de entrenamiento',
@@ -141,7 +135,7 @@ class _DietaryPreferencesScreenState extends State<DietaryPreferencesScreen>
                       .fadeIn(duration: 500.ms, delay: 200.ms)
                       .slideY(begin: 0.2, end: 0),
 
-                  SizedBox(height: size.height * 0.04),
+                  SizedBox(height: size.height * 0.57),
 
                   // Continue button
                   CustomButton(
