@@ -56,6 +56,7 @@ class _DietaryPreferencesScreenState extends State<DietaryPreferencesScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
+
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(

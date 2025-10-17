@@ -86,6 +86,10 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
 
   @override
   Widget build(BuildContext context) {
+
+    final double securityBotton = MediaQuery.of(context).padding.bottom + 65;
+    final double securityTop = MediaQuery.of(context).padding.top + 15;
+
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -127,68 +131,72 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
           ),
         ),
       ),
-      floatingActionButton: DraggableFab(
-        initPosition: Offset(MediaQuery.of(context).size.width - 20, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FloatingActionButton(
-              heroTag: 'main',
-              backgroundColor: theme.colorScheme.primary,
-              child: AnimatedIcon(
-                icon: AnimatedIcons.menu_close,
-                progress: _animationController,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isExpanded = !_isExpanded;
-                  if (_isExpanded) {
-                    _animationController.forward();
-                  } else {
-                    _animationController.reverse();
-                  }
-                });
-              },
-            ),
-            _buildAnimatedButton(
-              index: 0,
-              child: FloatingActionButton(
-                heroTag: 'profile',
+      floatingActionButton: Padding(
+        padding: EdgeInsetsGeometry.only(top: securityTop),
+        child: DraggableFab(
+          initPosition: Offset(MediaQuery.of(context).size.width - 20, 40),
+          securityBottom: securityBotton,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                heroTag: 'main',
                 backgroundColor: theme.colorScheme.primary,
-                child: const Icon(Icons.person),
-                onPressed: () => context.goNamed('profile'),
-              ),
-            ),
-            _buildAnimatedButton(
-              index: 1,
-              child: FloatingActionButton(
-                heroTag: 'settings',
-                backgroundColor: theme.colorScheme.primary,
-                child: const Icon(Icons.settings),
+                child: AnimatedIcon(
+                  icon: AnimatedIcons.menu_close,
+                  progress: _animationController,
+                ),
                 onPressed: () {
-                  // Implementar navegación a configuración
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                    if (_isExpanded) {
+                      _animationController.forward();
+                    } else {
+                      _animationController.reverse();
+                    }
+                  });
                 },
               ),
-            ),
-            _buildAnimatedButton(
-              index: 2,
-              child: FloatingActionButton(
-                heroTag: 'timer',
-                backgroundColor: theme.colorScheme.secondary,
-                child: const Icon(Icons.timer_outlined),
-                onPressed: () => context.goNamed('timer'),
+              _buildAnimatedButton(
+                index: 0,
+                child: FloatingActionButton(
+                  heroTag: 'profile',
+                  backgroundColor: theme.colorScheme.primary,
+                  child: const Icon(Icons.person),
+                  onPressed: () => context.goNamed('profile'),
+                ),
               ),
-            ),
-            _buildAnimatedButton(
-              index: 3,
-              child: FloatingActionButton(
-                heroTag: 'progress',
-                backgroundColor: theme.colorScheme.tertiary,
-                child: const Icon(Icons.bar_chart_outlined),
-                onPressed: () => context.goNamed('progress'),
+              _buildAnimatedButton(
+                index: 1,
+                child: FloatingActionButton(
+                  heroTag: 'settings',
+                  backgroundColor: theme.colorScheme.primary,
+                  child: const Icon(Icons.settings),
+                  onPressed: () {
+                    // Implementar navegación a configuración
+                  },
+                ),
               ),
-            ),
-          ],
+              _buildAnimatedButton(
+                index: 2,
+                child: FloatingActionButton(
+                  heroTag: 'timer',
+                  backgroundColor: theme.colorScheme.secondary,
+                  child: const Icon(Icons.timer_outlined),
+                  onPressed: () => context.goNamed('timer'),
+                ),
+              ),
+              _buildAnimatedButton(
+                index: 3,
+                child: FloatingActionButton(
+                  heroTag: 'progress',
+                  backgroundColor: theme.colorScheme.tertiary,
+                  child: const Icon(Icons.bar_chart_outlined),
+                  onPressed: () => context.goNamed('progress'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
