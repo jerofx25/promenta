@@ -49,6 +49,7 @@ class AuthProvider extends ChangeNotifier {
         email: user.email ?? '',
       );
 
+
       // Verificar si el usuario necesita completar el onboarding
       if (_userProfile!.age != null &&
           _userProfile!.weight != null &&
@@ -65,6 +66,7 @@ class AuthProvider extends ChangeNotifier {
       _authStatus = AuthStatus.unauthenticated;
       _notifyAndUpdateRouter();
     }
+
   }
 
   get profileImage => null;
@@ -199,8 +201,8 @@ class AuthProvider extends ChangeNotifier {
       weight: fields['weight'],
       height: fields['height'],
       trainingLevel: fields['trainingLevel'],
-      goals: fields['goals'],
-      injuries: fields['injuries'],
+      goals: fields['goals'] != null ? List<String>.from(fields['goals']) : _userProfile!.goals,
+      injuries: fields['injuries'] != null ? List<String>.from(fields['injuries']) : _userProfile!.injuries,
       photoUrl: fields['photoUrl'],
     );
     _saveUserToStorage();
@@ -216,7 +218,6 @@ class AuthProvider extends ChangeNotifier {
       _updateUserFields({'age': age});
     }
   }
-
 
   void setWeight(double weight) {
     if(_userProfile?.weight == null){
@@ -237,15 +238,11 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void setGoals(List<String> goals) {
-    if(_userProfile?.goals == null){
-      _updateUserFields({'goals': goals});
-    }
+    if(goals.isNotEmpty) _updateUserFields({'goals': goals});
   }
 
   void setInjuries(List<String> injuries) {
-    if(_userProfile?.injuries == null){
-      _updateUserFields({'injuries': injuries});
-    }
+    if(injuries.isNotEmpty) _updateUserFields({'injuries': injuries});
   }
 
   void setPhotoUrl(String photoUrl) {
