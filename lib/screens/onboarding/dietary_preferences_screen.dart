@@ -54,6 +54,7 @@ class _DietaryPreferencesScreenState extends State<DietaryPreferencesScreen>
 
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
 
           Positioned.fill(
