@@ -72,6 +72,7 @@ class _InjuriesScreenState extends State<InjuriesScreen>
     return Scaffold(
       body: Stack(
         children: [
+
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
