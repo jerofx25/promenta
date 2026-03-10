@@ -1,0 +1,2 @@
+export '../../../../models/exercise.dart';
+

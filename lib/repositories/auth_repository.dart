@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 
@@ -18,6 +19,7 @@ abstract class AuthRepository {
     String email,
     String password,
     String displayName,
+    String phone,
   );
 
   Future<void> signOut();
@@ -25,6 +27,9 @@ abstract class AuthRepository {
   Future<void> updateUserProfile(UserProfile updatedProfile);
 
   Future<void> updateUserFields(Map<String, dynamic> fields);
+
+  /// Sube la foto de perfil a Storage y devuelve la URL de descarga.
+  Future<String> uploadProfilePhoto(File file);
 
   Future<void> resetPassword(String email);
 

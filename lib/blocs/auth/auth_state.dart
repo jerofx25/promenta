@@ -24,12 +24,13 @@ class AuthState extends Equatable {
   AuthState copyWith({
     bool? authenticated,
     UserProfile? profile,
+    bool clearProfile = false,
     AuthFlowStatus? status,
     String? error,
   }) {
     return AuthState(
       authenticated: authenticated ?? this.authenticated,
-      profile: profile ?? this.profile,
+      profile: clearProfile ? null : (profile ?? this.profile),
       status: status ?? this.status,
       error: error,
     );
