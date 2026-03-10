@@ -5,24 +5,38 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
-// Importar para ImageFilter
+import 'package:go_router/go_router.dart';
 
 import 'firebase_options.dart';
-import 'screens/fitness_tracker_screen.dart';
-import 'screens/rm_calculator_screen.dart';
-import 'screens/workout_list_screen.dart';
-import 'screens/recipe_list_screen.dart';
+import 'package:IAEntrenar/features/progress/presentation/screens/fitness_tracker_screen.dart';
+import 'package:IAEntrenar/features/workout/presentation/screens/rm_calculator_screen.dart';
+import 'package:IAEntrenar/features/workout/presentation/screens/workout_list_screen.dart';
+import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_list_screen.dart';
 import 'utils/theme.dart';
-import 'providers/exercise_provider.dart';
-import 'providers/workout_provider.dart';
-import 'providers/recipe_provider.dart';
-import 'providers/auth_provider.dart';
 import 'router/app_router.dart';
 import 'services/auth_service.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/firebase_auth_repository.dart';
 import 'blocs/auth/auth_bloc.dart';
+import 'blocs/onboarding/onboarding_cubit.dart';
+import 'blocs/onboarding/onboarding_state.dart';
 import 'router/router_notifier.dart';
+import 'features/workout/domain/repositories/workout_repository.dart';
+import 'features/workout/domain/repositories/exercise_repository.dart';
+import 'features/workout/infrastructure/datasources/local_workout_datasource.dart';
+import 'features/workout/infrastructure/datasources/local_exercise_datasource.dart';
+import 'features/workout/infrastructure/repositories/local_workout_repository.dart';
+import 'features/workout/infrastructure/repositories/local_exercise_repository.dart';
+import 'features/workout/application/workout_cubit.dart';
+import 'features/workout/application/exercise_cubit.dart';
+import 'features/recipes/domain/repositories/recipe_repository.dart';
+import 'features/recipes/infrastructure/datasources/local_recipe_datasource.dart';
+import 'features/recipes/infrastructure/repositories/local_recipe_repository.dart';
+import 'features/recipes/application/recipe_cubit.dart';
+import 'features/progress/domain/repositories/progress_repository.dart';
+import 'features/progress/infrastructure/datasources/local_progress_datasource.dart';
+import 'features/progress/infrastructure/repositories/local_progress_repository.dart';
+import 'features/progress/application/progress_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,21 +47,56 @@ void main() async {
 
   final authService = AuthService();
   final authRepository = FirebaseAuthRepository(authService);
+  final workoutRepository =
+      LocalWorkoutRepository(LocalWorkoutDataSource());
+  final exerciseRepository =
+      LocalExerciseRepository(LocalExerciseDataSource());
+  final recipeRepository =
+      LocalRecipeRepository(LocalRecipeDataSource());
+  final progressRepository =
+      LocalProgressRepository(LocalProgressDataSource());
 
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthService>.value(value: authService),
         Provider<AuthRepository>.value(value: authRepository),
-        ChangeNotifierProvider(create: (_) => ExerciseProvider()),
-        ChangeNotifierProvider(create: (_) => WorkoutProvider()),
-        ChangeNotifierProvider(create: (_) => RecipeProvider()),
-        ChangeNotifierProvider(
-            create: (_) => AuthProvider(authService: authService)),
+        Provider<WorkoutRepository>.value(value: workoutRepository),
+        Provider<ExerciseRepository>.value(value: exerciseRepository),
+        Provider<RecipeRepository>.value(value: recipeRepository),
+        Provider<ProgressRepository>.value(value: progressRepository),
       ],
-      child: BlocProvider(
-        create: (context) =>
-            AuthBloc(authRepository: authRepository)..add(const AuthStarted()),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (context) => AuthBloc(authRepository: authRepository)
+              ..add(const AuthStarted()),
+          ),
+          BlocProvider<OnboardingCubit>(
+            create: (context) =>
+                OnboardingCubit(authRepository: authRepository),
+          ),
+          BlocProvider<WorkoutCubit>(
+            create: (_) =>
+                WorkoutCubit(workoutRepository: workoutRepository)
+                  ..loadWorkouts(),
+          ),
+          BlocProvider<ExerciseCubit>(
+            create: (_) =>
+                ExerciseCubit(exerciseRepository: exerciseRepository)
+                  ..loadInitial(),
+          ),
+          BlocProvider<RecipeCubit>(
+            create: (_) =>
+                RecipeCubit(recipeRepository: recipeRepository)
+                  ..loadRecipes(),
+          ),
+          BlocProvider<ProgressCubit>(
+            create: (_) =>
+                ProgressCubit(progressRepository: progressRepository)
+                  ..loadProgress(),
+          ),
+        ],
         child: const MyApp(),
       ),
     ),
@@ -59,25 +108,43 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (prev, curr) => prev.authenticated != curr.authenticated,
-      listener: (context, state) {
-        routerNotifier.refresh();
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listenWhen: (prev, curr) =>
+              prev.authenticated != curr.authenticated,
+          listener: (context, state) {
+            routerNotifier.refresh();
+          },
+        ),
+        BlocListener<OnboardingCubit, OnboardingState>(
+          listenWhen: (prev, curr) =>
+              prev.status != curr.status ||
+              prev.currentStep != curr.currentStep,
+          listener: (context, state) {
+            routerNotifier.refresh();
+          },
+        ),
+      ],
       child: MaterialApp.router(
-        title: 'IA Entrenar',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme(),
-        darkTheme: AppTheme.darkTheme(),
-        themeMode: ThemeMode.dark,
-        routerConfig: appRouter,
-      ),
+          title: 'IA Entrenar',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.darkTheme(),
+          themeMode: ThemeMode.dark,
+          routerConfig: appRouter,
+        ),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({
+    super.key,
+    this.showProfileCompletedSnackBar = false,
+  });
+
+  final bool showProfileCompletedSnackBar;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -85,6 +152,30 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.showProfileCompletedSnackBar) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final ctx = this.context;
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: const Text('Perfil completado correctamente'),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.fixed,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        // Limpiar query param cuando el snackbar ya se ocultó para no reconstruir antes
+        Future.delayed(const Duration(seconds: 4), () {
+          if (!mounted) return;
+          context.goNamed('home');
+        });
+      });
+    }
+  }
 
   final List<Widget> _screens = [
     const FitnessTrackerScreen(),

@@ -1,10 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 import '../models/user_profile.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Obtener el usuario actual
   User? get currentUser => _auth.currentUser;
@@ -14,17 +19,25 @@ class AuthService {
 
   // Obtener el perfil del usuario actual
   Stream<UserProfile?> get currentUserProfile {
-    if (currentUser == null) return Stream.value(null);
-    return _firestore
-        .collection('users')
-        .doc(currentUser!.uid)
-        .snapshots()
-        .map((doc) => doc.exists ? UserProfile.fromFirestore(doc) : null);
+    return _auth.authStateChanges().asyncExpand((user) {
+      if (user == null) {
+        return Stream<UserProfile?>.value(null);
+      }
+
+      return _firestore
+          .collection('users')
+          .doc(user.uid)
+          .snapshots()
+          .map((doc) => doc.exists ? UserProfile.fromFirestore(doc) : null);
+    });
   }
 
   // Registro con email y contraseña
   Future<UserCredential> registerWithEmailAndPassword(
-      String email, String password, String displayName) async {
+      String email,
+      String password,
+      String displayName,
+      String phone) async {
     try {
       // Crear usuario en Firebase Auth
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -40,8 +53,11 @@ class AuthService {
         id: result.user!.uid,
         displayName: displayName,
         email: email,
+        phone: phone,
         createdAt: DateTime.now(),
         lastLogin: DateTime.now(),
+        onboardingStep: 0,
+        onboardingCompleted: false,
       );
 
       await _firestore
@@ -65,9 +81,9 @@ class AuthService {
       );
 
       // Actualizar lastLogin
-      await _firestore.collection('users').doc(result.user!.uid).update({
+      await _firestore.collection('users').doc(result.user!.uid).set({
         'lastLogin': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
 
       return result;
     } catch (e) {
@@ -88,11 +104,26 @@ class AuthService {
         await _firestore
             .collection('users')
             .doc(currentUser!.uid)
-            .update(updatedProfile.toFirestore());
+            .set(updatedProfile.toFirestore(), SetOptions(merge: true));
       }
     } catch (e) {
       rethrow;
     }
+  }
+
+  /// Sube la foto de perfil a Storage y devuelve la URL de descarga.
+  Future<String> uploadProfilePhoto(File file) async {
+    final user = currentUser;
+    if (user == null) {
+      throw StateError('Usuario no autenticado');
+    }
+    final ref = _storage
+        .ref()
+        .child('users')
+        .child(user.uid)
+        .child('profile_photo.jpg');
+    await ref.putFile(file);
+    return await ref.getDownloadURL();
   }
 
   // Actualizar campos específicos del perfil
@@ -102,7 +133,7 @@ class AuthService {
         await _firestore
             .collection('users')
             .doc(currentUser!.uid)
-            .update(fields);
+            .set(fields, SetOptions(merge: true));
       }
     } catch (e) {
       rethrow;

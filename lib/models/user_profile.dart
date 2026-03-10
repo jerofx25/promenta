@@ -4,6 +4,7 @@ class UserProfile {
   final String id;
   final String displayName;
   final String email;
+  final String? phone;
   final String? photoUrl;
   final int? age;
   final String? gender;
@@ -16,6 +17,8 @@ class UserProfile {
   final String? trainingLevel;
   final DateTime? createdAt;
   final DateTime? lastLogin;
+  final int? onboardingStep;
+  final bool onboardingCompleted;
   final bool planGenerated;
   final bool isPremium;
   final String aiModelVersion;
@@ -24,6 +27,7 @@ class UserProfile {
     required this.id,
     required this.displayName,
     required this.email,
+    this.phone,
     this.photoUrl,
     this.age,
     this.gender,
@@ -36,6 +40,8 @@ class UserProfile {
     this.trainingLevel,
     this.createdAt,
     this.lastLogin,
+    this.onboardingStep,
+    this.onboardingCompleted = false,
     this.planGenerated = false,
     this.isPremium = false,
     this.aiModelVersion = 'v1.3',
@@ -47,6 +53,7 @@ class UserProfile {
       id: doc.id,
       displayName: data['displayName'] ?? '',
       email: data['email'] ?? '',
+      phone: data['phone'],
       photoUrl: data['photoUrl'],
       age: data['age'],
       gender: data['gender'],
@@ -59,6 +66,8 @@ class UserProfile {
       trainingLevel: data['trainingLevel'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastLogin: (data['lastLogin'] as Timestamp?)?.toDate(),
+      onboardingStep: data['onboardingStep'],
+      onboardingCompleted: data['onboardingCompleted'] ?? false,
       planGenerated: data['planGenerated'] ?? false,
       isPremium: data['isPremium'] ?? false,
       aiModelVersion: data['aiModelVersion'] ?? 'v1.3',
@@ -69,6 +78,7 @@ class UserProfile {
     return {
       'displayName': displayName,
       'email': email,
+      'phone': phone,
       'photoUrl': photoUrl,
       'age': age,
       'gender': gender,
@@ -81,6 +91,8 @@ class UserProfile {
       'trainingLevel': trainingLevel,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'lastLogin': lastLogin != null ? Timestamp.fromDate(lastLogin!) : null,
+      'onboardingStep': onboardingStep,
+      'onboardingCompleted': onboardingCompleted,
       'planGenerated': planGenerated,
       'isPremium': isPremium,
       'aiModelVersion': aiModelVersion,
@@ -91,6 +103,7 @@ class UserProfile {
     String? id,
     String? displayName,
     String? email,
+    String? phone,
     String? photoUrl,
     int? age,
     String? gender,
@@ -103,6 +116,8 @@ class UserProfile {
     String? trainingLevel,
     DateTime? createdAt,
     DateTime? lastLogin,
+    int? onboardingStep,
+    bool? onboardingCompleted,
     bool? planGenerated,
     bool? isPremium,
     String? aiModelVersion,
@@ -111,6 +126,7 @@ class UserProfile {
       id: id ?? this.id,
       displayName: displayName ?? this.displayName,
       email: email ?? this.email,
+      phone: phone ?? this.phone,
       photoUrl: photoUrl ?? this.photoUrl,
       age: age ?? this.age,
       gender: gender ?? this.gender,
@@ -123,6 +139,8 @@ class UserProfile {
       trainingLevel: trainingLevel ?? this.trainingLevel,
       createdAt: createdAt ?? this.createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
+      onboardingStep: onboardingStep ?? this.onboardingStep,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       planGenerated: planGenerated ?? this.planGenerated,
       isPremium: isPremium ?? this.isPremium,
       aiModelVersion: aiModelVersion ?? this.aiModelVersion,
@@ -134,6 +152,7 @@ class UserProfile {
       'id': id,
       'displayName': displayName,
       'email': email,
+      'phone': phone,
       'photoUrl': photoUrl,
       'age': age,
       'gender': gender,
@@ -146,6 +165,8 @@ class UserProfile {
       'trainingLevel': trainingLevel,
       'createdAt': createdAt,
       'lastLogin': lastLogin,
+      'onboardingStep': onboardingStep,
+      'onboardingCompleted': onboardingCompleted,
       'planGenerated': planGenerated,
       'isPremium': isPremium,
       'aiModelVersion': aiModelVersion,
@@ -157,6 +178,7 @@ class UserProfile {
       id: json['id'],
       displayName: json['displayName'],
       email: json['email'],
+      phone: json['phone'],
       photoUrl: json['photoUrl'],
       age: json['age'],
       gender: json['gender'],
@@ -169,6 +191,8 @@ class UserProfile {
       trainingLevel: json['trainingLevel'],
       createdAt: json['createdAt'],
       lastLogin: json['lastLogin'],
+      onboardingStep: json['onboardingStep'],
+      onboardingCompleted: json['onboardingCompleted'] ?? false,
       planGenerated: json['planGenerated'],
       isPremium: json['isPremium'],
       aiModelVersion: json['aiModelVersion'],
@@ -179,5 +203,4 @@ class UserProfile {
 
   get progressPhotoDescription => null;
 
-  get phone => null;
 }

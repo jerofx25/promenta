@@ -25,6 +25,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         transformer: bloc_concurrency.droppable());
     on<AuthSignOutRequested>(_onSignOutRequested,
         transformer: bloc_concurrency.droppable());
+    on<AuthPasswordResetRequested>(_onPasswordResetRequested,
+        transformer: bloc_concurrency.droppable());
     on<_AuthStatusChanged>(_onStatusChanged);
     on<_AuthProfileChanged>(_onProfileChanged);
   }
@@ -43,13 +45,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onSignInRequested(
       AuthSignInRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthFlowStatus.loading));
+    emit(state.copyWith(status: AuthFlowStatus.loading, error: null));
     try {
       await _authRepository.signInWithEmailAndPassword(
         event.email,
         event.password,
       );
-      // Streams reaccionarán y actualizarán el estado
+      emit(state.copyWith(status: AuthFlowStatus.idle));
     } catch (e) {
       emit(state.copyWith(status: AuthFlowStatus.failure, error: e.toString()));
     }
@@ -57,13 +59,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onRegisterRequested(
       AuthRegisterRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthFlowStatus.loading));
+    emit(state.copyWith(status: AuthFlowStatus.loading, error: null));
     try {
       await _authRepository.registerWithEmailAndPassword(
         event.email,
         event.password,
         event.displayName,
+        event.phone,
       );
+      emit(state.copyWith(status: AuthFlowStatus.idle));
     } catch (e) {
       emit(state.copyWith(status: AuthFlowStatus.failure, error: e.toString()));
     }
@@ -71,9 +75,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onSignOutRequested(
       AuthSignOutRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthFlowStatus.loading));
+    emit(state.copyWith(status: AuthFlowStatus.loading, error: null));
     try {
       await _authRepository.signOut();
+      emit(state.copyWith(status: AuthFlowStatus.idle));
+    } catch (e) {
+      emit(state.copyWith(status: AuthFlowStatus.failure, error: e.toString()));
+    }
+  }
+
+  Future<void> _onPasswordResetRequested(
+    AuthPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthFlowStatus.loading, error: null));
+    try {
+      await _authRepository.resetPassword(event.email);
+      emit(state.copyWith(status: AuthFlowStatus.idle));
     } catch (e) {
       emit(state.copyWith(status: AuthFlowStatus.failure, error: e.toString()));
     }
@@ -82,7 +100,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onStatusChanged(_AuthStatusChanged event, Emitter<AuthState> emit) {
     final next = event.isAuthenticated
         ? state.copyWith(authenticated: true)
-        : state.copyWith(authenticated: false, profile: null);
+        : state.copyWith(authenticated: false, clearProfile: true);
     emit(next);
   }
 
