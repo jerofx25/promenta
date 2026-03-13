@@ -26,7 +26,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1500),
     );
 
     // Start animation after frame is built
@@ -158,15 +158,16 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                   SizedBox(height: size.height * 0.03),
 
                   // Training frequency options
-                  SizedBox(
-                    height: 210,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: OnboardingConstants.trainingFrequencies.length,
-                      physics: const ClampingScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final frequency =
-                            OnboardingConstants.trainingFrequencies[index];
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: OnboardingConstants.trainingFrequencies
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                        final index = entry.key;
+                        final frequency = entry.value;
                         return _buildFrequencyCard(
                           frequency,
                           _frequencyIcon(index),
@@ -177,7 +178,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
                                 duration: 500.ms,
                                 delay: 300.ms + (index * 100).ms)
                             .slideX(begin: 0.2, end: 0);
-                      },
+                      }).toList(),
                     ),
                   ),
 
@@ -292,6 +293,7 @@ class _TrainingGoalScreenState extends State<TrainingGoalScreen>
       },
       child: Container(
         width: 150,
+        height: 210,
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           color: isSelected

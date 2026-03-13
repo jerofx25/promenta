@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/user_profile.dart';
 
@@ -28,7 +29,14 @@ class AuthService {
           .collection('users')
           .doc(user.uid)
           .snapshots()
-          .map((doc) => doc.exists ? UserProfile.fromFirestore(doc) : null);
+          .map((doc) => doc.exists ? UserProfile.fromFirestore(doc) : null)
+          .handleError((e, stackTrace) {
+            debugPrint('Error getting user profile stream: $e');
+            debugPrint('$stackTrace');
+            // No rethrow: evita Unhandled Exception. El stream sigue activo.
+            // Si persiste permission-denied, revisa Firestore Rules y que el
+            // documento users/<uid> exista y las reglas estén desplegadas.
+          });
     });
   }
 

@@ -16,6 +16,23 @@ class AppAlerts {
     );
   }
 
+  /// Muestra una alerta de éxito abajo con duración en segundos (p. ej. perfil completado).
+  static void showSuccessAtBottom(
+    BuildContext context,
+    String message, {
+    int durationSeconds = 4,
+  }) {
+    AlertInfo.show(
+      context: context,
+      text: message,
+      typeInfo: TypeInfo.success,
+      position: MessagePosition.bottom,
+      duration: durationSeconds,
+      backgroundColor: _darkBackground,
+      textColor: _lightText,
+    );
+  }
+
   /// Muestra una alerta de error (Error)
   static void showError(BuildContext context, String message) {
     AlertInfo.show(

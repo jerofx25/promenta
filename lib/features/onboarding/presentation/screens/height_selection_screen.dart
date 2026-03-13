@@ -34,7 +34,7 @@ class _HeightSelectionScreenState extends State<HeightSelectionScreen>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1500),
     );
 
     // Start animation after frame is built

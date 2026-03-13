@@ -1,13 +1,18 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../utils/theme.dart';
 
 class WorkoutStackedColumnChart extends StatelessWidget {
   final List<StackedWorkoutData> workoutData;
+  final Color cardioColor;
+  final Color strengthColor;
+  final Color flexibilityColor;
 
   const WorkoutStackedColumnChart({
     super.key,
     required this.workoutData,
+    this.cardioColor = const Color(0xFFE91E63),
+    this.strengthColor = const Color(0xFF9C27B0),
+    this.flexibilityColor = const Color(0xFF00BCD4),
   });
 
   @override
@@ -30,18 +35,20 @@ class WorkoutStackedColumnChart extends StatelessWidget {
                 sideTitles: SideTitles(
                   showTitles: true,
                   getTitlesWidget: (value, meta) {
-                    if (value % 10 == 0 && value != 0) {
+                    if (value % 20 == 0 || value == meta.max) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
-                          '${value.toInt()}min',
+                          value == value.roundToDouble()
+                              ? '${value.toInt()}'
+                              : value.toStringAsFixed(0),
                           style: titleStyle,
                         ),
                       );
                     }
                     return const SizedBox();
                   },
-                  reservedSize: 42,
+                  reservedSize: 36,
                 ),
               ),
               bottomTitles: AxisTitles(
@@ -102,7 +109,7 @@ class WorkoutStackedColumnChart extends StatelessWidget {
 
       final cardioRod = BarChartRodData(
         toY: data.values[0],
-        color: AppTheme.moveRingColor,
+        color: cardioColor,
         width: 12,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(4),
@@ -112,7 +119,7 @@ class WorkoutStackedColumnChart extends StatelessWidget {
 
       final strengthRod = BarChartRodData(
         toY: data.values[1],
-        color: AppTheme.exerciseRingColor,
+        color: strengthColor,
         width: 12,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(4),
@@ -122,7 +129,7 @@ class WorkoutStackedColumnChart extends StatelessWidget {
 
       final flexibilityRod = BarChartRodData(
         toY: data.values[2],
-        color: AppTheme.standRingColor,
+        color: flexibilityColor,
         width: 12,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(4),

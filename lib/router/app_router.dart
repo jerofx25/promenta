@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:IAEntrenar/core/ui/sleek_spinner.dart';
 import 'package:provider/provider.dart';
 
 import '../main.dart';
@@ -18,17 +19,18 @@ import 'package:IAEntrenar/features/onboarding/presentation/screens/training_goa
 import 'package:IAEntrenar/features/onboarding/presentation/screens/dietary_preferences_screen.dart';
 import 'package:IAEntrenar/features/onboarding/presentation/screens/profile_photo_screen.dart';
 import 'package:IAEntrenar/features/timer/presentation/screens/timer_screen.dart';
-import 'package:IAEntrenar/features/progress/presentation/screens/progress_dashboard_screen.dart';
 import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_list_screen.dart';
 import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:IAEntrenar/features/workout/presentation/screens/workout_detail_screen.dart';
 import 'package:IAEntrenar/features/workout/presentation/screens/workout_list_screen.dart';
 import 'package:IAEntrenar/features/progress/presentation/screens/fitness_tracker_screen.dart';
 import 'router_notifier.dart';
+import 'route_logging_observer.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   refreshListenable: routerNotifier,
+  observers: [RouteLoggingObserver()],
   redirect: (context, state) {
     final authBloc = context.read<AuthBloc>();
     final isAuthenticated = authBloc.state.authenticated;
@@ -91,7 +93,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: SleekSpinner(size: 56)),
       ),
     ),
 
@@ -124,10 +126,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/home',
       name: 'home',
-      builder: (context, state) => MainScreen(
-        showProfileCompletedSnackBar:
-            state.queryParams['profileCompleted'] == '1',
-      ),
+      builder: (context, state) => const MainScreen(),
     ),
 
     /// Onboarding
@@ -201,16 +200,6 @@ final GoRouter appRouter = GoRouter(
       name: 'timer',
       pageBuilder: (context, state) => const CustomTransitionPage(
         child: TimerScreen(),
-        transitionsBuilder: _slideUpTransition,
-      ),
-    ),
-
-    /// Ruta del Dashboard de Progreso
-    GoRoute(
-      path: '/progress',
-      name: 'progress',
-      pageBuilder: (context, state) => const CustomTransitionPage(
-        child: ProgressDashboardScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
