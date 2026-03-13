@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:IAEntrenar/core/ui/sleek_spinner.dart';
 
 enum CustomButtonType { primary, secondary, outline, text }
 
@@ -75,18 +76,11 @@ class CustomButton extends StatelessWidget {
     // Button content
     Widget buttonContent;
     if (isLoading) {
-      // Show circular progress indicator when loading
-      buttonContent = SizedBox(
-        height: 24,
-        width: 24,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(
-            type == CustomButtonType.outline || type == CustomButtonType.text
-                ? colorScheme.primary
-                : colorScheme.onPrimary,
-          ),
-        ),
+      buttonContent = SleekSpinner(
+        size: 24,
+        color: type == CustomButtonType.outline || type == CustomButtonType.text
+            ? colorScheme.primary
+            : colorScheme.onPrimary,
       );
     } else {
       // Show icon and text when not loading

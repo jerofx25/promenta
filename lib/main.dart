@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
-import 'package:go_router/go_router.dart';
 
+import 'core/ui/alerts.dart';
+import 'core/ui/pending_profile_snackbar.dart';
 import 'firebase_options.dart';
 import 'package:IAEntrenar/features/progress/presentation/screens/fitness_tracker_screen.dart';
 import 'package:IAEntrenar/features/workout/presentation/screens/rm_calculator_screen.dart';
@@ -37,12 +39,17 @@ import 'features/progress/domain/repositories/progress_repository.dart';
 import 'features/progress/infrastructure/datasources/local_progress_datasource.dart';
 import 'features/progress/infrastructure/repositories/local_progress_repository.dart';
 import 'features/progress/application/progress_cubit.dart';
+import 'features/metrics/domain/repositories/metrics_repository.dart';
+import 'features/metrics/data/datasources/firestore_metrics_datasource.dart';
+import 'features/metrics/data/repositories/firestore_metrics_repository.dart';
+import 'features/metrics/application/metrics_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await initializeDateFormatting('es', null);
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   final authService = AuthService();
@@ -55,6 +62,8 @@ void main() async {
       LocalRecipeRepository(LocalRecipeDataSource());
   final progressRepository =
       LocalProgressRepository(LocalProgressDataSource());
+  final metricsDataSource = FirestoreMetricsDataSource();
+  final metricsRepository = FirestoreMetricsRepository(metricsDataSource);
 
   runApp(
     MultiProvider(
@@ -65,6 +74,7 @@ void main() async {
         Provider<ExerciseRepository>.value(value: exerciseRepository),
         Provider<RecipeRepository>.value(value: recipeRepository),
         Provider<ProgressRepository>.value(value: progressRepository),
+        Provider<MetricsRepository>.value(value: metricsRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -95,6 +105,9 @@ void main() async {
             create: (_) =>
                 ProgressCubit(progressRepository: progressRepository)
                   ..loadProgress(),
+          ),
+          BlocProvider<MetricsCubit>(
+            create: (_) => MetricsCubit(repository: metricsRepository),
           ),
         ],
         child: const MyApp(),
@@ -139,12 +152,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({
-    super.key,
-    this.showProfileCompletedSnackBar = false,
-  });
-
-  final bool showProfileCompletedSnackBar;
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -156,23 +164,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.showProfileCompletedSnackBar) {
+    if (consumeProfileCompletedSnackBarPending()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final ctx = this.context;
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(
-            content: const Text('Perfil completado correctamente'),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.fixed,
-            duration: const Duration(seconds: 4),
-          ),
+        AppAlerts.showSuccessAtBottom(
+          context,
+          'Perfil completado correctamente',
+          durationSeconds: 4,
         );
-        // Limpiar query param cuando el snackbar ya se ocultó para no reconstruir antes
-        Future.delayed(const Duration(seconds: 4), () {
-          if (!mounted) return;
-          context.goNamed('home');
-        });
       });
     }
   }
@@ -208,7 +207,7 @@ class _MainScreenState extends State<MainScreen> {
               .withOpacity(0.8), // Color primario para mejor contraste
           buttonBackgroundColor: theme.colorScheme
               .primary, // Mismo color pero sólido para el botón seleccionado
-          height: 60,
+          height: 75,
           index: _currentIndex,
           onTap: (index) {
             setState(() {
@@ -221,7 +220,7 @@ class _MainScreenState extends State<MainScreen> {
                 Icons.home,
                 color: Colors.white, // Color blanco para los iconos
               ),
-              label: 'Home',
+              label: 'Tracker',
               labelStyle: TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -233,7 +232,7 @@ class _MainScreenState extends State<MainScreen> {
                 Icons.fitness_center,
                 color: Colors.white,
               ),
-              label: 'Fitness',
+              label: 'Program',
               labelStyle: TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -245,7 +244,7 @@ class _MainScreenState extends State<MainScreen> {
                 Icons.monitor_weight,
                 color: Colors.white,
               ),
-              label: 'Weight',
+              label: 'You vs You',
               labelStyle: TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -257,7 +256,7 @@ class _MainScreenState extends State<MainScreen> {
                 Icons.restaurant_menu,
                 color: Colors.white,
               ),
-              label: 'Menu',
+              label: 'Meal',
               labelStyle: TextStyle(
                 color: Colors.white,
                 fontSize: 10,

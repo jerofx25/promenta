@@ -9,6 +9,8 @@ import 'package:IAEntrenar/blocs/onboarding/onboarding_cubit.dart';
 import 'package:IAEntrenar/blocs/onboarding/onboarding_state.dart';
 import 'package:IAEntrenar/core/ui/buttons.dart';
 import 'package:IAEntrenar/core/ui/alerts.dart';
+import 'package:IAEntrenar/core/ui/pending_profile_snackbar.dart';
+import 'package:IAEntrenar/core/ui/sleek_spinner.dart';
 import 'package:IAEntrenar/repositories/auth_repository.dart';
 
 /// Texto del selector de fotos en español.
@@ -76,7 +78,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
     super.initState();
     _animationController = _DeferredForwardController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1500),
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -131,6 +133,10 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
   }
 
   void _handleContinue() async {
+    // Marcar antes de completeOnboarding: el redirect (por routerNotifier.refresh())
+    // puede navegar a Home antes de que lleguemos a goNamed, y MainScreen lee el flag en initState.
+    setProfileCompletedSnackBarPending();
+
     if (_hasSelectedImage && _selectedFile != null) {
       setState(() => _isLoading = true);
       try {
@@ -151,6 +157,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
             'No se pudo subir la foto. Intenta de nuevo.',
           );
         }
+        consumeProfileCompletedSnackBarPending(); // cancelar snackbar si falló
         return;
       }
     } else {
@@ -159,7 +166,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
     }
 
     if (!mounted) return;
-    context.goNamed('home', queryParams: {'profileCompleted': '1'});
+    context.goNamed('home');
   }
 
   void _handleBack() {
@@ -326,7 +333,8 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
                 Container(
                   color: Colors.black.withOpacity(0.7),
                   child: Center(
-                    child: CircularProgressIndicator(
+                    child: SleekSpinner(
+                      size: 56,
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -370,11 +378,8 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
+                    child: SleekSpinner(
+                      size: 40,
                       color: theme.colorScheme.primary,
                     ),
                   );

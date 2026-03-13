@@ -1,140 +1,128 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:IAEntrenar/utils/theme.dart';
+import 'package:segment_display/segment_display.dart';
 
-enum TimerMode { stopwatch, countdown, interval }
+enum TimerMode { intervals, countUp, countDown, stopwatch, clock }
 
 class TimerScreen extends StatefulWidget {
   const TimerScreen({super.key});
 
   @override
-  _TimerScreenState createState() => _TimerScreenState();
+  State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _TimerScreenState extends State<TimerScreen>
-    with SingleTickerProviderStateMixin {
-  TimerMode _currentMode = TimerMode.stopwatch;
-
-  // Stopwatch variables
+class _TimerScreenState extends State<TimerScreen> {
+  TimerMode _mode = TimerMode.stopwatch;
   bool _isRunning = false;
-  int _elapsedMilliseconds = 0;
   Timer? _timer;
 
-  // Countdown variables
-  int _countdownTime = 60; // Seconds
-  int _remainingTime = 60;
-  final TextEditingController _countdownMinutesController =
-      TextEditingController(text: '1');
-  final TextEditingController _countdownSecondsController =
-      TextEditingController(text: '0');
+  // Stopwatch
+  int _stopwatchMs = 0;
 
-  // Interval variables
-  int _workTime = 30; // Seconds
-  int _restTime = 10; // Seconds
-  int _intervals = 5;
-  int _currentInterval = 0;
-  bool _isWorkPeriod = true;
-  final TextEditingController _workTimeController = TextEditingController(text: '30');
-  final TextEditingController _restTimeController = TextEditingController(text: '10');
-  final TextEditingController _intervalsController = TextEditingController(text: '5');
+  // CountUp / CountDown
+  int _targetSeconds = 600; // 10 mins
+  int _currentSeconds = 0;
 
-  // Animation
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  // Intervals
+  int _workSeconds = 20;
+  int _restSeconds = 10;
+  int _rounds = 8;
+  int _currentRound = 1;
+  bool _isWork = true;
+  int _intervalSeconds = 20;
 
-  // Timer variables
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
+    // Forzar orientación horizontal
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+    // Ocultar barra de estado para inmersión total
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-
-    _animationController.forward();
+    // Si el modo inicial es reloj, iniciar el timer
+    if (_mode == TimerMode.clock) {
+      _startTimer();
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _animationController.dispose();
-    _countdownMinutesController.dispose();
-    _countdownSecondsController.dispose();
-    _workTimeController.dispose();
-    _restTimeController.dispose();
-    _intervalsController.dispose();
+    // Restaurar orientación vertical
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    // Restaurar UI del sistema
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
   void _startTimer() {
-    if (_isRunning) return;
+    if (_isRunning && _mode != TimerMode.clock) return;
 
     setState(() {
       _isRunning = true;
     });
 
-    // Different timer behavior based on mode
-    switch (_currentMode) {
-      case TimerMode.stopwatch:
-        _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-          setState(() {
-            _elapsedMilliseconds += 10;
-          });
-        });
-        break;
-
-      case TimerMode.countdown:
-        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() {
-            if (_remainingTime > 0) {
-              _remainingTime--;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      setState(() {
+        if (_mode == TimerMode.stopwatch) {
+          _stopwatchMs += 10;
+        } else if (_mode == TimerMode.countUp) {
+          if (_stopwatchMs % 1000 == 0) {
+            _currentSeconds++;
+            if (_currentSeconds >= _targetSeconds) {
+              _stopTimer();
+              _playSound();
+            }
+          }
+          _stopwatchMs += 10;
+        } else if (_mode == TimerMode.countDown) {
+          if (_stopwatchMs % 1000 == 0) {
+            if (_currentSeconds > 0) {
+              _currentSeconds--;
             } else {
               _stopTimer();
               _playSound();
             }
-          });
-        });
-        break;
-
-      case TimerMode.interval:
-        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() {
-            if (_isWorkPeriod) {
-              if (_remainingTime > 0) {
-                _remainingTime--;
-              } else {
-                // Switch to rest period
-                _isWorkPeriod = false;
-                _remainingTime = _restTime;
-                _playSound();
-              }
+          }
+          _stopwatchMs += 10;
+        } else if (_mode == TimerMode.intervals) {
+          if (_stopwatchMs % 1000 == 0) {
+            if (_intervalSeconds > 0) {
+              _intervalSeconds--;
             } else {
-              if (_remainingTime > 0) {
-                _remainingTime--;
+              if (_isWork) {
+                _isWork = false;
+                _intervalSeconds = _restSeconds;
+                _playSound();
               } else {
-                _currentInterval++;
-
-                if (_currentInterval >= _intervals) {
-                  // Finished all intervals
+                if (_currentRound < _rounds) {
+                  _currentRound++;
+                  _isWork = true;
+                  _intervalSeconds = _workSeconds;
+                  _playSound();
+                } else {
                   _stopTimer();
                   _playSound();
-                  return;
                 }
-
-                // Switch back to work period
-                _isWorkPeriod = true;
-                _remainingTime = _workTime;
-                _playSound();
               }
             }
-          });
-        });
-        break;
-    }
+          }
+          _stopwatchMs += 10;
+        } else if (_mode == TimerMode.clock) {
+          // El reloj se actualiza solo
+        }
+      });
+    });
   }
 
   void _stopTimer() {
@@ -147,645 +135,386 @@ class _TimerScreenState extends State<TimerScreen>
   void _resetTimer() {
     _stopTimer();
     setState(() {
-      switch (_currentMode) {
-        case TimerMode.stopwatch:
-          _elapsedMilliseconds = 0;
-          break;
-        case TimerMode.countdown:
-          _remainingTime = _countdownTime;
-          break;
-        case TimerMode.interval:
-          _remainingTime = _workTime;
-          _currentInterval = 0;
-          _isWorkPeriod = true;
-          break;
+      _stopwatchMs = 0;
+      if (_mode == TimerMode.countUp) {
+        _currentSeconds = 0;
+      } else if (_mode == TimerMode.countDown) {
+        _currentSeconds = _targetSeconds;
+      } else if (_mode == TimerMode.intervals) {
+        _currentRound = 1;
+        _isWork = true;
+        _intervalSeconds = _workSeconds;
       }
     });
   }
 
-  void _updateCountdownTime() {
-    final minutes = int.tryParse(_countdownMinutesController.text) ?? 0;
-    final seconds = int.tryParse(_countdownSecondsController.text) ?? 0;
-    setState(() {
-      _countdownTime = (minutes * 60) + seconds;
-      _remainingTime = _countdownTime;
-    });
-  }
-
-  void _updateIntervalSettings() {
-    final workTime = int.tryParse(_workTimeController.text) ?? 30;
-    final restTime = int.tryParse(_restTimeController.text) ?? 10;
-    final intervals = int.tryParse(_intervalsController.text) ?? 5;
-
-    setState(() {
-      _workTime = workTime;
-      _restTime = restTime;
-      _intervals = intervals;
-      _remainingTime = _workTime;
-      _currentInterval = 0;
-      _isWorkPeriod = true;
-    });
-  }
-
   void _playSound() {
-    // Sound would be played here if using audio plugin
-    // For now, we'll just display a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_currentMode == TimerMode.countdown
-            ? 'Tiempo completado!'
-            : _isWorkPeriod
-                ? 'Comenzar trabajo!'
-                : 'Comenzar descanso!'),
-        duration: const Duration(seconds: 1),
+    // Aquí iría el sonido (beep). Por ahora solo mostramos un snackbar visual si no estamos en inmersivo.
+  }
+
+  void _togglePlayPause() {
+    if (_mode == TimerMode.clock) return;
+    if (_isRunning) {
+      _stopTimer();
+    } else {
+      _startTimer();
+    }
+  }
+
+  void _changeMode(TimerMode newMode) {
+    _stopTimer();
+    setState(() {
+      _mode = newMode;
+      _resetTimer();
+      if (_mode == TimerMode.clock) {
+        _startTimer();
+      }
+    });
+    Navigator.pop(context);
+  }
+
+  void _showSettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF111111),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _buildSettingsMenu(),
+    );
+  }
+
+  void _showConfigurationDialog() {
+    int tempWork = _workSeconds;
+    int tempRest = _restSeconds;
+    int tempRounds = _rounds;
+    int tempTarget = _targetSeconds;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF111111),
+              title: Text(
+                _mode == TimerMode.intervals ? 'Configurar Intervalos' : 'Configurar Tiempo',
+                style: const TextStyle(color: Colors.white),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_mode == TimerMode.intervals) ...[
+                      _buildNumberPicker('Trabajo (seg)', tempWork, (v) => setDialogState(() => tempWork = v), step: 5),
+                      _buildNumberPicker('Descanso (seg)', tempRest, (v) => setDialogState(() => tempRest = v), step: 5),
+                      _buildNumberPicker('Rondas', tempRounds, (v) => setDialogState(() => tempRounds = v), step: 1),
+                    ] else if (_mode == TimerMode.countUp || _mode == TimerMode.countDown) ...[
+                      _buildNumberPicker('Tiempo (seg)', tempTarget, (v) => setDialogState(() => tempTarget = v), step: 10),
+                    ]
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar', style: TextStyle(color: Colors.white54)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      if (_mode == TimerMode.intervals) {
+                        _workSeconds = tempWork;
+                        _restSeconds = tempRest;
+                        _rounds = tempRounds;
+                      } else {
+                        _targetSeconds = tempTarget;
+                      }
+                      _resetTimer();
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Guardar', style: TextStyle(color: AppTheme.exerciseRingColor)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNumberPicker(String label, int value, ValueChanged<int> onChanged, {int step = 1, int min = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: 16)),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove_circle_outline, color: Colors.white54),
+                onPressed: () => onChanged(value - step >= min ? value - step : min),
+              ),
+              SizedBox(
+                width: 40,
+                child: Text(
+                  '$value',
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline, color: Colors.white54),
+                onPressed: () => onChanged(value + step),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  String _formatTime(int milliseconds) {
-    int hundreds = (milliseconds / 10).floor() % 100;
-    int seconds = (milliseconds / 1000).floor() % 60;
-    int minutes = (milliseconds / 60000).floor() % 60;
-    int hours = (milliseconds / 3600000).floor();
-
-    String hoursStr = hours > 0 ? '${hours.toString().padLeft(2, '0')}:' : '';
-    String minutesStr = '${minutes.toString().padLeft(2, '0')}:';
-    String secondsStr = seconds.toString().padLeft(2, '0');
-    String hundredsStr = hundreds.toString().padLeft(2, '0');
-
-    return _currentMode == TimerMode.stopwatch
-        ? '$hoursStr$minutesStr$secondsStr.$hundredsStr'
-        : '$hoursStr$minutesStr$secondsStr';
-  }
-
-  String _formatCountdownTime(int seconds) {
-    int mins = seconds ~/ 60;
-    int secs = seconds % 60;
-    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  Widget _buildStopwatchMode() {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        const SizedBox(height: 40),
-        // Display
-        Container(
-          height: 240,
-          width: 240,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: theme.colorScheme.primary.withOpacity(0.1),
-            border: Border.all(
-              color: theme.colorScheme.primary,
-              width: 4,
-            ),
-          ),
-          child: Center(
-            child: AnimatedSlide(
-              offset: Offset(0, _isRunning ? 0.0 : 0.05),
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                _formatTime(_elapsedMilliseconds),
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 50),
-        // Controls
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildControlButton(
-              onPressed: _resetTimer,
-              icon: Icons.refresh,
-              label: 'Reiniciar',
-              color: theme.colorScheme.tertiary,
-            ),
-            const SizedBox(width: 32),
-            _buildControlButton(
-              onPressed: _isRunning ? _stopTimer : _startTimer,
-              icon: _isRunning ? Icons.pause : Icons.play_arrow,
-              label: _isRunning ? 'Pausar' : 'Iniciar',
-              color: _isRunning
-                  ? theme.colorScheme.secondary
-                  : theme.colorScheme.primary,
-              large: true,
-            ),
-            const SizedBox(width: 32),
-            _buildControlButton(
-              onPressed: () {
-                // Functionality to record lap time would go here
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content:
-                          Text('Marca: ${_formatTime(_elapsedMilliseconds)}')),
-                );
-              },
-              icon: Icons.flag,
-              label: 'Marca',
-              color: theme.colorScheme.secondary,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCountdownMode() {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        const SizedBox(height: 40),
-        // Display
-        Container(
-          height: 240,
-          width: 240,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: theme.colorScheme.secondary.withOpacity(0.1),
-            border: Border.all(
-              color: theme.colorScheme.secondary,
-              width: 4,
-            ),
-          ),
-          child: Center(
-            child: AnimatedSlide(
-              offset: Offset(0, _isRunning ? 0.0 : 0.05),
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                _formatCountdownTime(_remainingTime),
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.secondary,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 40),
-        // Settings (only visible when timer is not running)
-        if (!_isRunning) ...[
-          // Fixed bracket syntax here
-          Text(
-            'Ajustar tiempo',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildSettingsMenu() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 60,
-                child: TextField(
-                  controller: _countdownMinutesController,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Min',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                ':',
-                style: theme.textTheme.headlineMedium,
-              ),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: 60,
-                child: TextField(
-                  controller: _countdownSecondsController,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Seg',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed: _updateCountdownTime,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.secondary,
-                  foregroundColor: theme.colorScheme.onSecondary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Aplicar'),
-              ),
+              _buildMenuItem('H1', 'Intervalos', 'Intervalos de trabajo/descanso', TimerMode.intervals),
+              const Divider(color: Colors.white24),
+              _buildMenuItem('UP', 'Cuenta ascendente', '00:00 a 99:59', TimerMode.countUp),
+              const Divider(color: Colors.white24),
+              _buildMenuItem('dn', 'Cuenta atrás', '99:59 a 00:00', TimerMode.countDown),
+              const Divider(color: Colors.white24),
+              _buildMenuItem('cr', 'Cronómetro', 'Cuenta ascendente con milisegundos', TimerMode.stopwatch),
+              const Divider(color: Colors.white24),
+              _buildMenuItem('cL', 'Reloj', 'Hora actual', TimerMode.clock),
             ],
           ),
-          const SizedBox(height: 20),
-        ],
-        // Controls
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildControlButton(
-              onPressed: _resetTimer,
-              icon: Icons.refresh,
-              label: 'Reiniciar',
-              color: theme.colorScheme.tertiary,
-            ),
-            const SizedBox(width: 32),
-            _buildControlButton(
-              onPressed: _isRunning ? _stopTimer : _startTimer,
-              icon: _isRunning ? Icons.pause : Icons.play_arrow,
-              label: _isRunning ? 'Pausar' : 'Iniciar',
-              color: _isRunning
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.secondary,
-              large: true,
-            ),
-          ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildIntervalMode() {
-    final theme = Theme.of(context);
-    final color =
-        _isWorkPeriod ? theme.colorScheme.primary : theme.colorScheme.tertiary;
-
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        // Interval status
-        if (_isRunning || _currentInterval > 0) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _isWorkPeriod ? Icons.fitness_center : Icons.nightlight_round,
-                  color: color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _isWorkPeriod ? 'Trabajo' : 'Descanso',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ],
-            ),
+  Widget _buildMenuItem(String prefix, String title, String subtitle, TimerMode mode) {
+    final isSelected = _mode == mode;
+    return ListTile(
+      leading: SizedBox(
+        width: 40,
+        child: Text(
+          prefix,
+          style: GoogleFonts.vt323(
+            fontSize: 28,
+            color: AppTheme.standRingColor,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Intervalo ${_currentInterval + 1} de $_intervals',
-            style: theme.textTheme.titleSmall,
-          ),
-        ],
-        const SizedBox(height: 20),
-        // Display
-        Container(
-          height: 240,
-          width: 240,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withOpacity(0.1),
-            border: Border.all(
-              color: color,
-              width: 4,
-            ),
-          ),
-          child: Center(
-            child: AnimatedSlide(
-              offset: Offset(0, _isRunning ? 0.0 : 0.05),
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                _formatCountdownTime(_remainingTime),
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ),
-          ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 30),
-        // Settings (only visible when timer is not running)
-        if (!_isRunning && _currentInterval == 0) ...[
-          Text(
-            'Ajustar intervalos',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  SizedBox(
-                    width: 70,
-                    child: TextField(
-                      controller: _workTimeController,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        labelText: 'Trabajo',
-                        suffixText: 's',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Trabajo',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              Column(
-                children: [
-                  SizedBox(
-                    width: 70,
-                    child: TextField(
-                      controller: _restTimeController,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        labelText: 'Descanso',
-                        suffixText: 's',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Descanso',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              Column(
-                children: [
-                  SizedBox(
-                    width: 70,
-                    child: TextField(
-                      controller: _intervalsController,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        labelText: 'Ciclos',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Repeticiones',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _updateIntervalSettings,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Aplicar Configuración'),
-          ),
-          const SizedBox(height: 20),
-        ],
-        // Controls
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildControlButton(
-              onPressed: _resetTimer,
-              icon: Icons.refresh,
-              label: 'Reiniciar',
-              color: theme.colorScheme.tertiary,
-            ),
-            const SizedBox(width: 32),
-            _buildControlButton(
-              onPressed: _isRunning ? _stopTimer : _startTimer,
-              icon: _isRunning ? Icons.pause : Icons.play_arrow,
-              label: _isRunning ? 'Pausar' : 'Iniciar',
-              color: _isRunning
-                  ? theme.colorScheme.secondary
-                  : theme.colorScheme.primary,
-              large: true,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildControlButton({
-    required VoidCallback onPressed,
-    required IconData icon,
-    required String label,
-    required Color color,
-    bool large = false,
-  }) {
-    return Column(
-      children: [
-        SizedBox(
-          height: large ? 80 : 60,
-          width: large ? 80 : 60,
-          child: ElevatedButton(
-            onPressed: onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: color,
-              foregroundColor: Colors.white,
-              shape: const CircleBorder(),
-              padding: EdgeInsets.zero,
-            ),
-            child: Icon(
-              icon,
-              size: large ? 36 : 24,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white54, fontSize: 14),
+      ),
+      trailing: isSelected ? const Icon(Icons.check, color: AppTheme.exerciseRingColor) : null,
+      onTap: () => _changeMode(mode),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Timer',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _togglePlayPause,
+        onDoubleTap: _resetTimer,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            child: Column(
+              children: [
+                // Top Bar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Botón atrás e Indicadores de modo
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
+                          onPressed: () => Navigator.of(context).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 16),
+                        _buildModeIndicator('rd', _mode == TimerMode.intervals, AppTheme.standRingColor),
+                        const SizedBox(width: 12),
+                        _buildModeIndicator('H1', _mode == TimerMode.intervals, Colors.redAccent),
+                        const SizedBox(width: 12),
+                        _buildModeIndicator('UP', _mode == TimerMode.countUp, Colors.redAccent),
+                        const SizedBox(width: 12),
+                        _buildModeIndicator('dn', _mode == TimerMode.countDown, Colors.redAccent),
+                        const SizedBox(width: 12),
+                        _buildModeIndicator('cr', _mode == TimerMode.stopwatch, Colors.redAccent),
+                      ],
+                    ),
+                    // Botón de menú y configuración
+                    Row(
+                      children: [
+                        if (_mode == TimerMode.intervals || _mode == TimerMode.countUp || _mode == TimerMode.countDown)
+                          IconButton(
+                            icon: const Icon(Icons.settings_suggest, color: Colors.white, size: 32),
+                            onPressed: _showConfigurationDialog,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        if (_mode == TimerMode.intervals || _mode == TimerMode.countUp || _mode == TimerMode.countDown)
+                          const SizedBox(width: 16),
+                        IconButton(
+                          icon: const Icon(Icons.menu, color: Colors.white, size: 32),
+                          onPressed: _showSettings,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                
+                const Spacer(),
+                
+                // Main Display
+                FittedBox(
+                  fit: BoxFit.contain,
+                  child: _buildMainDisplay(),
+                ),
+                
+                const Spacer(),
+                
+                // Bottom Bar (Logo)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    
+                    if (_mode != TimerMode.clock)
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(_isRunning ? Icons.pause_circle_filled : Icons.play_circle_fill),
+                            color: Colors.white,
+                            iconSize: 48,
+                            onPressed: _togglePlayPause,
+                          ),
+                          const SizedBox(width: 16),
+                          IconButton(
+                            icon: const Icon(Icons.stop_circle),
+                            color: Colors.white,
+                            iconSize: 48,
+                            onPressed: () {
+                              _stopTimer();
+                              _resetTimer();
+                            },
+                          ),
+                          const SizedBox(width: 16),
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            color: Colors.white,
+                            iconSize: 40,
+                            onPressed: _resetTimer,
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      body: Stack(
-        children: [
-          // Background image
-          Opacity(
-            opacity: 0.07,
-            child: Image.network(
-              "https://pixabay.com/get/g6b756a33a6bfcadafa5413f691564040f3b906616d16792393e6a09db7ce2d605641e0ed0284b1cee19c142d9cdf88bdb67de70b9998d3c8579372d5e7fbd281_1280.jpg",
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          // Content
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  // Mode selector
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              theme.colorScheme.onSurface.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildModeTab(
-                            icon: Icons.timer,
-                            label: 'Cronómetro',
-                            isSelected: _currentMode == TimerMode.stopwatch,
-                            onTap: () => setState(() {
-                              _currentMode = TimerMode.stopwatch;
-                              _resetTimer();
-                            }),
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildModeTab(
-                            icon: Icons.hourglass_empty,
-                            label: 'Temporizador',
-                            isSelected: _currentMode == TimerMode.countdown,
-                            onTap: () => setState(() {
-                              _currentMode = TimerMode.countdown;
-                              _resetTimer();
-                            }),
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildModeTab(
-                            icon: Icons.repeat,
-                            label: 'Intervalos',
-                            isSelected: _currentMode == TimerMode.interval,
-                            onTap: () => setState(() {
-                              _currentMode = TimerMode.interval;
-                              _resetTimer();
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Selected mode content
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: _currentMode == TimerMode.stopwatch
-                        ? _buildStopwatchMode()
-                        : _currentMode == TimerMode.countdown
-                            ? _buildCountdownMode()
-                            : _buildIntervalMode(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildModeTab({
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : null,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
+  Widget _buildModeIndicator(String text, bool isActive, Color activeColor) {
+    return Text(
+      text,
+      style: GoogleFonts.vt323(
+        fontSize: 28,
+        color: isActive ? activeColor : Colors.white.withOpacity(0.1),
+        shadows: isActive ? [Shadow(color: activeColor, blurRadius: 10)] : null,
+      ),
+    );
+  }
+
+  Widget _buildMainDisplay() {
+    switch (_mode) {
+      case TimerMode.stopwatch:
+        int mins = (_stopwatchMs / 60000).floor();
+        int secs = (_stopwatchMs / 1000).floor() % 60;
+        int ms = (_stopwatchMs % 1000) ~/ 10;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.6),
-                fontWeight: isSelected ? FontWeight.bold : null,
-              ),
-            ),
+            _buildSegmentDisplay(mins.toString().padLeft(2, '0'), const Color(0xFF0B6FFF), 2),
+            const SizedBox(width: 16),
+            _buildSegmentDisplay('${secs.toString().padLeft(2, '0')}:${ms.toString().padLeft(2, '0')}', const Color(0xFFFF1E12), 5),
           ],
-        ),
+        );
+      case TimerMode.countUp:
+      case TimerMode.countDown:
+        int mins = (_currentSeconds / 60).floor();
+        int secs = _currentSeconds % 60;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSegmentDisplay(mins.toString().padLeft(2, '0'), const Color(0xFF0B6FFF), 2),
+            const SizedBox(width: 16),
+            _buildSegmentDisplay(secs.toString().padLeft(2, '0'), const Color(0xFFFF1E12), 2),
+          ],
+        );
+      case TimerMode.intervals:
+        int mins = (_intervalSeconds / 60).floor();
+        int secs = _intervalSeconds % 60;
+        final color = _isWork ? const Color(0xFFFF1E12) : const Color(0xFF0B6FFF);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSegmentDisplay(_currentRound.toString().padLeft(2, '0'), const Color(0xFF0B6FFF), 2),
+            const SizedBox(width: 16),
+            _buildSegmentDisplay('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', color, 5),
+          ],
+        );
+      case TimerMode.clock:
+        final now = DateTime.now();
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSegmentDisplay(now.hour.toString().padLeft(2, '0'), const Color(0xFF0B6FFF), 2),
+            const SizedBox(width: 16),
+            _buildSegmentDisplay('${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}', const Color(0xFFFF1E12), 5),
+          ],
+        );
+    }
+  }
+
+  Widget _buildSegmentDisplay(String value, Color color, int charCount) {
+    return SevenSegmentDisplay(
+      value: value,
+      size: 14.0, // Tamaño base para hacer los números grandes
+      characterCount: charCount,
+      backgroundColor: Colors.transparent,
+      segmentStyle: HexSegmentStyle(
+        enabledColor: color,
+        disabledColor: const Color(0xFF101010),
       ),
     );
   }

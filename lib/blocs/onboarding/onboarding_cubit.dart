@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/user_profile.dart';
 import '../../repositories/auth_repository.dart';
@@ -17,28 +18,36 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   StreamSubscription<UserProfile?>? _profileSubscription;
 
   void _init() {
-    _profileSubscription = _authRepository.currentUserProfile().listen((profile) {
-      if (profile == null) {
-        emit(const OnboardingState.initial());
-        return;
-      }
+    _profileSubscription = _authRepository.currentUserProfile().listen(
+      (profile) {
+        if (profile == null) {
+          emit(const OnboardingState.initial());
+          return;
+        }
 
-      final status = profile.onboardingCompleted
-          ? OnboardingStatus.completed
-          : OnboardingStatus.inProgress;
-      final step = profile.onboardingCompleted
-          ? state.totalSteps - 1
-          : (profile.onboardingStep ?? _calculateLegacyStep(profile))
-              .clamp(0, state.totalSteps - 1);
+        final status = profile.onboardingCompleted
+            ? OnboardingStatus.completed
+            : OnboardingStatus.inProgress;
+        final step = profile.onboardingCompleted
+            ? state.totalSteps - 1
+            : (profile.onboardingStep ?? _calculateLegacyStep(profile))
+                .clamp(0, state.totalSteps - 1);
 
-      emit(
-        state.copyWith(
-          status: status,
-          currentStep: step,
-          profile: profile,
-        ),
-      );
-    });
+        emit(
+          state.copyWith(
+            status: status,
+            currentStep: step,
+            profile: profile,
+          ),
+        );
+      },
+      onError: (error) {
+        // Manejar errores de stream (ej. permisos)
+        debugPrint('Error en stream de perfil: $error');
+        // Podríamos emitir un estado de error si existiera, o volver a initial
+        // Por ahora evitamos el crash
+      },
+    );
   }
 
   int _calculateLegacyStep(UserProfile profile) {

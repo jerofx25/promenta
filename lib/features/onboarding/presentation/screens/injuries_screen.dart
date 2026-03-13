@@ -22,9 +22,10 @@ class _InjuriesScreenState extends State<InjuriesScreen>
   @override
   void initState() {
     super.initState();
+    // Debe ser >= max(delay + duration) de todos los efectos para evitar Interval end > 1
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1500),
     );
 
     // Start animation after frame is built
