@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:IAEntrenar/core/ui/sleek_spinner.dart';
 
 class SocialButton extends StatelessWidget {
   final String text;
@@ -10,14 +11,14 @@ class SocialButton extends StatelessWidget {
   final bool isLoading;
 
   const SocialButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     required this.icon,
     required this.backgroundColor,
     required this.textColor,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +37,7 @@ class SocialButton extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           if (isLoading)
-            SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(textColor),
-              ),
-            ),
+            SleekSpinner(size: 24, color: textColor),
           if (!isLoading)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

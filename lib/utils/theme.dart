@@ -47,7 +47,7 @@ class AppTheme {
   static const Color standRingColor = AppColors.accentBlue;
 
   static ThemeData lightTheme() {
-    final ColorScheme colorScheme = ColorScheme.light(
+    const ColorScheme colorScheme = ColorScheme.light(
       primary: AppColors.accentPurple,
       onPrimary: AppColors.primaryText,
       secondary: AppColors.accentPink,
@@ -56,16 +56,14 @@ class AppTheme {
       onTertiary: AppColors.primaryText,
       surface: AppColors.cardBackground,
       onSurface: AppColors.primaryText,
-      background: AppColors.background,
-      onBackground: AppColors.primaryText,
-      error: const Color(0xFFFF2D55), // Rojo de error
+      error: Color(0xFFFF2D55), // Rojo de error
       onError: AppColors.primaryText,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.background,
+      scaffoldBackgroundColor: colorScheme.surface,
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -80,44 +78,44 @@ class AppTheme {
         displayLarge: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: 32,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         displayMedium: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: 28,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         displaySmall: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: 24,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         headlineMedium: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 22,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         titleLarge: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 20,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         titleMedium: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 16,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyMedium: GoogleFonts.poppins(
           fontSize: 14,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodySmall: GoogleFonts.poppins(
           fontSize: 12,
-          color: colorScheme.onBackground.withOpacity(0.7),
+          color: colorScheme.onSurface.withOpacity(0.7),
         ),
       ),
       cardTheme: CardThemeData(
@@ -171,7 +169,7 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
-              BorderSide(color: colorScheme.onBackground.withOpacity(0.1)),
+              BorderSide(color: colorScheme.onSurface.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -184,11 +182,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.all(16),
         hintStyle: GoogleFonts.poppins(
           fontSize: 14,
-          color: colorScheme.onBackground.withOpacity(0.5),
+          color: colorScheme.onSurface.withOpacity(0.5),
         ),
         labelStyle: GoogleFonts.poppins(
           fontSize: 14,
-          color: colorScheme.onBackground.withOpacity(0.7),
+          color: colorScheme.onSurface.withOpacity(0.7),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -206,17 +204,17 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       iconTheme: IconThemeData(
-        color: colorScheme.onBackground,
+        color: colorScheme.onSurface,
         size: 24,
       ),
       dividerTheme: DividerThemeData(
-        color: colorScheme.onBackground.withOpacity(0.1),
+        color: colorScheme.onSurface.withOpacity(0.1),
         thickness: 1,
         space: 24,
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onBackground.withOpacity(0.6),
+        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
         labelStyle: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 14,
@@ -235,7 +233,7 @@ class AppTheme {
   }
 
   static ThemeData darkTheme() {
-    final ColorScheme colorScheme = ColorScheme.dark(
+    const ColorScheme colorScheme = ColorScheme.dark(
       primary: AppColors.accentPurple,
       onPrimary: AppColors.primaryText,
       secondary: AppColors.accentPink,
@@ -244,16 +242,14 @@ class AppTheme {
       onTertiary: AppColors.primaryText,
       surface: AppColors.cardBackground,
       onSurface: AppColors.primaryText,
-      background: AppColors.background,
-      onBackground: AppColors.primaryText,
-      error: const Color(0xFFFF2D55),
+      error: Color(0xFFFF2D55),
       onError: AppColors.primaryText,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.background,
+      scaffoldBackgroundColor: colorScheme.surface,
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -268,44 +264,44 @@ class AppTheme {
         displayLarge: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: 32,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         displayMedium: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: 28,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         displaySmall: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: 24,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         headlineMedium: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 22,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         titleLarge: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 20,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         titleMedium: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 16,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyMedium: GoogleFonts.poppins(
           fontSize: 14,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodySmall: GoogleFonts.poppins(
           fontSize: 12,
-          color: colorScheme.onBackground.withOpacity(0.7),
+          color: colorScheme.onSurface.withOpacity(0.7),
         ),
       ),
       cardTheme: CardThemeData(
@@ -359,7 +355,7 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
-              BorderSide(color: colorScheme.onBackground.withOpacity(0.1)),
+              BorderSide(color: colorScheme.onSurface.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -372,11 +368,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.all(16),
         hintStyle: GoogleFonts.poppins(
           fontSize: 14,
-          color: colorScheme.onBackground.withOpacity(0.5),
+          color: colorScheme.onSurface.withOpacity(0.5),
         ),
         labelStyle: GoogleFonts.poppins(
           fontSize: 14,
-          color: colorScheme.onBackground.withOpacity(0.7),
+          color: colorScheme.onSurface.withOpacity(0.7),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -394,17 +390,17 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       iconTheme: IconThemeData(
-        color: colorScheme.onBackground,
+        color: colorScheme.onSurface,
         size: 24,
       ),
       dividerTheme: DividerThemeData(
-        color: colorScheme.onBackground.withOpacity(0.1),
+        color: colorScheme.onSurface.withOpacity(0.1),
         thickness: 1,
         space: 24,
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onBackground.withOpacity(0.6),
+        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
         labelStyle: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
           fontSize: 14,

@@ -26,6 +26,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Necesitamos acceso a la cámara para que puedas tomarte una foto de perfil.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Necesitamos acceso a tus datos de salud para mostrar pasos, frecuencia cardiaca y sueño en la app.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Necesitamos permiso para guardar datos de salud si decides sincronizar información desde la app.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Necesitamos acceso al micrófono para grabar videos si decides tomar uno para tu perfil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a tu galería para que puedas seleccionar una foto de perfil.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

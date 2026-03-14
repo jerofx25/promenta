@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
@@ -8,6 +9,11 @@ class FirebaseAuthRepository implements AuthRepository {
   final AuthService _authService;
 
   FirebaseAuthRepository(this._authService);
+
+  @override
+  Future<String> uploadProfilePhoto(File file) {
+    return _authService.uploadProfilePhoto(file);
+  }
 
   @override
   Stream<bool> authStateChanges() {
@@ -29,11 +35,13 @@ class FirebaseAuthRepository implements AuthRepository {
     String email,
     String password,
     String displayName,
+    String phone,
   ) async {
     await _authService.registerWithEmailAndPassword(
       email,
       password,
       displayName,
+      phone,
     );
   }
 

@@ -8,7 +8,7 @@ class WorkoutProvider extends ChangeNotifier {
   Workout? _selectedWorkout;
   
   // Filter states
-  Set<WorkoutType> _selectedTypes = Set<WorkoutType>();
+  final Set<WorkoutType> _selectedTypes = <WorkoutType>{};
   DifficultyLevel? _selectedDifficulty;
   String _searchQuery = '';
 
