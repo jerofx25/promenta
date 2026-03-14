@@ -80,9 +80,7 @@ class ExerciseProvider extends ChangeNotifier {
     // Add initial progress entry
     addProgressEntry(exercise.id, maxWeight);
     
-    if (_selectedExercise == null) {
-      _selectedExercise = exercise;
-    }
+    _selectedExercise ??= exercise;
     
     await _saveExercises();
     notifyListeners();

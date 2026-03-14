@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:IAEntrenar/core/ui/sleek_spinner.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../main.dart';
-import '../providers/auth_provider.dart';
 import '../blocs/auth/auth_bloc.dart';
-import '../screens/auth/login_screen.dart';
-import '../screens/auth/profile_screen.dart';
-import '../screens/auth/signup_screen.dart';
-import '../screens/auth/forgot_password_screen.dart';
-import '../screens/onboarding/age_selection_screen.dart';
-import '../screens/onboarding/height_selection_screen.dart';
-import '../screens/onboarding/weight_selection_screen.dart';
-import '../screens/onboarding/injuries_screen.dart';
-import '../screens/onboarding/training_goal_screen.dart';
-import '../screens/onboarding/dietary_preferences_screen.dart';
-import '../screens/onboarding/profile_photo_screen.dart';
-import '../screens/timer_screen.dart';
-import '../screens/progress_dashboard_screen.dart';
-import '../screens/recipe_list_screen.dart';
-import '../screens/recipe_detail_screen.dart';
+import '../blocs/onboarding/onboarding_cubit.dart';
+import '../blocs/onboarding/onboarding_state.dart';
+import 'package:IAEntrenar/features/auth/presentation/screens/login_screen.dart';
+import 'package:IAEntrenar/features/auth/presentation/screens/profile_screen.dart';
+import 'package:IAEntrenar/features/auth/presentation/screens/signup_screen.dart';
+import 'package:IAEntrenar/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/age_selection_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/height_selection_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/weight_selection_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/injuries_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/training_goal_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/dietary_preferences_screen.dart';
+import 'package:IAEntrenar/features/onboarding/presentation/screens/profile_photo_screen.dart';
+import 'package:IAEntrenar/features/timer/presentation/screens/timer_screen.dart';
+import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_list_screen.dart';
+import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_detail_screen.dart';
+import 'package:IAEntrenar/features/workout/presentation/screens/workout_detail_screen.dart';
+import 'package:IAEntrenar/features/workout/presentation/screens/workout_list_screen.dart';
+import 'package:IAEntrenar/features/progress/presentation/screens/fitness_tracker_screen.dart';
 import 'router_notifier.dart';
+import 'route_logging_observer.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   refreshListenable: routerNotifier,
+  observers: [RouteLoggingObserver()],
   redirect: (context, state) {
     final authBloc = context.read<AuthBloc>();
     final isAuthenticated = authBloc.state.authenticated;
     final currentLoc = state.subloc;
 
-    // Onboarding se mantiene con AuthProvider mientras migramos gradualmente
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final authStatus = authProvider.authStatus;
+    final onboardingState = context.read<OnboardingCubit>().state;
 
     if (!isAuthenticated) {
       // Permitir rutas públicas sin autenticación
@@ -42,21 +45,41 @@ final GoRouter appRouter = GoRouter(
       return null;
     }
 
-    if (authStatus == AuthStatus.onboarding) {
-      final desired = '/onboarding/step${authProvider.onboardingStep}';
-      if (!currentLoc.startsWith('/onboarding')) {
+    // Si está autenticado pero aún no sabemos el estado del onboarding, mostrar loading
+    if (onboardingState.status == OnboardingStatus.idle) {
+      // Si el usuario acaba de autenticarse y sigue en login/signup, forzar loading
+      if (currentLoc == '/login' || currentLoc == '/signup') {
+        return '/';
+      }
+      // Permitir rutas de onboarding o forgot-password para no bloquear la navegación manual
+      if (currentLoc == '/forgot-password' || currentLoc.startsWith('/onboarding')) {
+        return null; // Dejar que pase a la ruta solicitada
+      }
+      return '/'; // Si intenta ir a /home u otra ruta protegida, forzar loading
+    }
+
+    if (onboardingState.status == OnboardingStatus.inProgress) {
+      final desired = '/onboarding/step${onboardingState.currentStep}';
+      final requestedOnboardingStep = _extractOnboardingStep(currentLoc);
+
+      if (requestedOnboardingStep == null) {
         return desired;
       }
-      // Si ya estamos en onboarding pero en un paso distinto, redirigir al paso correcto
-      if (currentLoc != desired) {
+
+      // Permite volver a pasos anteriores, pero no saltar a uno futuro.
+      if (requestedOnboardingStep > onboardingState.currentStep) {
         return desired;
       }
+
       return null;
     }
 
-    if (isAuthenticated) {
+    // Si está autenticado y el onboarding está completo
+    if (onboardingState.status == OnboardingStatus.completed) {
       if (currentLoc == '/' ||
           currentLoc == '/login' ||
+          currentLoc == '/signup' ||
+          currentLoc == '/forgot-password' ||
           currentLoc.startsWith('/onboarding')) {
         return '/home';
       }
@@ -70,45 +93,31 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const Scaffold(
-        body: Center(child: Text("Loading...")),
+        body: Center(child: SleekSpinner(size: 56)),
       ),
-      redirect: (context, state) {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        final authStatus = authProvider.authStatus;
-        final isAuthenticated = context.read<AuthBloc>().state.authenticated;
-
-        if (!isAuthenticated) {
-          return '/login';
-        } else if (authStatus == AuthStatus.onboarding) {
-          return '/onboarding/step${authProvider.onboardingStep}';
-        } else if (isAuthenticated) {
-          return '/home';
-        }
-        return null;
-      },
     ),
 
     GoRoute(
       path: '/login',
       name: 'login',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const LoginScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: LoginScreen(),
         transitionsBuilder: _fadeTransition,
       ),
     ),
     GoRoute(
       path: '/signup',
       name: 'signup',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const SignupScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: SignupScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/forgot-password',
       name: 'forgot-password',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const ForgotPasswordScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: ForgotPasswordScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
@@ -124,56 +133,56 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/step0',
       name: 'onboarding-step0',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const AgeSelectionScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: AgeSelectionScreen(),
         transitionsBuilder: _fadeTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step1',
       name: 'onboarding-step1',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const HeightSelectionScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: HeightSelectionScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step2',
       name: 'onboarding-step2',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const WeightSelectionScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: WeightSelectionScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step3',
       name: 'onboarding-step3',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const InjuriesScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: InjuriesScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step4',
       name: 'onboarding-step4',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const TrainingGoalScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: TrainingGoalScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step5',
       name: 'onboarding-step5',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const DietaryPreferencesScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: DietaryPreferencesScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/onboarding/step6',
       name: 'onboarding-step6',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const ProfilePhotoScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: ProfilePhotoScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
@@ -189,19 +198,39 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/timer',
       name: 'timer',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const TimerScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: TimerScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
 
-    /// Ruta del Dashboard de Progreso
+    /// Ruta del Fitness Tracker (detalle de actividad)
     GoRoute(
-      path: '/progress',
-      name: 'progress',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const ProgressDashboardScreen(),
+      path: '/fitness-tracker',
+      name: 'fitness-tracker',
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: FitnessTrackerScreen(),
         transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+
+    /// Ruta de detalle de entrenamiento
+    GoRoute(
+      path: '/workout-detail',
+      name: 'workout-detail',
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: WorkoutDetailScreen(),
+        transitionsBuilder: _slideLeftTransition,
+      ),
+    ),
+
+    /// Ruta de lista de entrenamientos
+    GoRoute(
+      path: '/workouts',
+      name: 'workout-list',
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: WorkoutListScreen(),
+        transitionsBuilder: _slideLeftTransition,
       ),
     ),
 
@@ -209,16 +238,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/recipes',
       name: 'recipe-list',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const RecipeListScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: RecipeListScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
     GoRoute(
       path: '/recipe-detail',
       name: 'recipe-detail',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const RecipeDetailScreen(),
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: RecipeDetailScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
@@ -263,4 +292,17 @@ Widget _slideUpTransition(
     ).animate(animation),
     child: child,
   );
+}
+
+int? _extractOnboardingStep(String? location) {
+  if (location == null) {
+    return null;
+  }
+
+  final match = RegExp(r'^/onboarding/step(\d+)$').firstMatch(location);
+  if (match == null) {
+    return null;
+  }
+
+  return int.tryParse(match.group(1) ?? '');
 }

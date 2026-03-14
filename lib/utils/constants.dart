@@ -22,8 +22,8 @@ class OnboardingConstants {
   static const double defaultWeightLbs = 154.0; // 70kg in lbs
   
   // Height selection constants
-  static const double minHeightCm = 140.0;
-  static const double maxHeightCm = 220.0;
+  static const double minHeightCm = 130.0;
+  static const double maxHeightCm = 210.0;
   static const double defaultHeightCm = 170.0;
   static const double minHeightFt = 4.6; // 140cm in feet
   static const double maxHeightFt = 7.2; // 220cm in feet

@@ -20,7 +20,7 @@ class BackButton extends StatelessWidget {
         color: color,
         size: 23,
       ),
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         left: 7,
       ),
       style: IconButton.styleFrom(backgroundColor: Colors.black38),

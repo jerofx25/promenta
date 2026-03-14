@@ -32,10 +32,17 @@ dependencies:
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
   bloc_concurrency: ^0.3.0
+  country_code_picker: ^3.4.1
+  alert_info: ^0.0.8
+  sleek_circular_slider: ^2.1.0
+  insta_assets_picker: ^3.4.0
+  segment_display: ^0.5.0
+  health: ^13.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
