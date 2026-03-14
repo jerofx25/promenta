@@ -44,6 +44,23 @@ class AppAlerts {
     );
   }
 
+  /// Muestra una alerta de error abajo (mismo estilo que éxito).
+  static void showErrorAtBottom(
+    BuildContext context,
+    String message, {
+    int durationSeconds = 4,
+  }) {
+    AlertInfo.show(
+      context: context,
+      text: message,
+      typeInfo: TypeInfo.error,
+      position: MessagePosition.bottom,
+      duration: durationSeconds,
+      backgroundColor: _darkBackground,
+      textColor: _lightText,
+    );
+  }
+
   /// Muestra una alerta de advertencia (Warning)
   static void showWarning(BuildContext context, String message) {
     AlertInfo.show(
