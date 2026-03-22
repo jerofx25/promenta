@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:IAEntrenar/models/workout.dart';
-import 'package:IAEntrenar/features/workout/application/workout_cubit.dart';
-import 'package:IAEntrenar/features/workout/application/workout_state.dart';
+import 'package:IAEntrenar/models/workup_day.dart';
+import 'package:IAEntrenar/features/workout/application/workups_cubit.dart';
+import 'package:IAEntrenar/features/workout/application/workups_state.dart';
 
 class WorkoutListScreen extends StatefulWidget {
   const WorkoutListScreen({super.key});
@@ -12,48 +12,18 @@ class WorkoutListScreen extends StatefulWidget {
   State<WorkoutListScreen> createState() => _WorkoutListScreenState();
 }
 
-class _WorkoutListScreenState extends State<WorkoutListScreen>
-    with SingleTickerProviderStateMixin {
+class _WorkoutListScreenState extends State<WorkoutListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  late AnimationController _animationController;
-  late Animation<double> _animation;
   bool _showFilters = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-
-    _searchController.addListener(() {
-      context
-          .read<WorkoutCubit>()
-          .setSearchQuery(_searchController.text);
-    });
-  }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
   void _toggleFilters() {
-    setState(() {
-      _showFilters = !_showFilters;
-      if (_showFilters) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
+    setState(() => _showFilters = !_showFilters);
   }
 
   @override
@@ -79,36 +49,74 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
       ),
       body: Column(
         children: [
-          // Search bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
               controller: _searchController,
+              onChanged: (value) {
+                context.read<WorkupsCubit>().setSearchQuery(value);
+              },
               decoration: InputDecoration(
-                hintText: 'Buscar entrenamientos...',
-                prefixIcon:
-                    Icon(Icons.search, color: theme.colorScheme.primary),
+                hintText: 'Buscar por título o descripción',
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                filled: true,
-                fillColor: theme.colorScheme.surface,
+                isDense: true,
               ),
             ),
           ),
-
-          // Filters
-          SizeTransition(
-            sizeFactor: _animation,
-            child: _buildFilters(),
-          ),
-
-          // Workout list
+          if (_showFilters) _buildFilters(),
           Expanded(
-            child: BlocBuilder<WorkoutCubit, WorkoutState>(
+            child: BlocBuilder<WorkupsCubit, WorkupsState>(
                 builder: (context, state) {
-              final workouts = state.filteredWorkouts;
+              final workouts = state.filteredWorkupDays;
+              final hasLoadedDays = state.workupDays.isNotEmpty;
+
+              if (state.isLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (state.error != null) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error al cargar el programa',
+                          style: theme.textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.error!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<WorkupsCubit>().loadWorkupDays();
+                          },
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
 
               if (workouts.isEmpty) {
                 return Center(
@@ -116,32 +124,29 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.fitness_center,
+                        hasLoadedDays
+                            ? Icons.search_off
+                            : Icons.fitness_center,
                         size: 64,
                         color: theme.colorScheme.primary.withOpacity(0.5),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No se encontraron entrenamientos',
+                        hasLoadedDays
+                            ? 'Ningún día coincide con los filtros o la búsqueda'
+                            : 'No se encontraron entrenamientos',
                         style: theme.textTheme.titleMedium,
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          context
-                              .read<WorkoutCubit>()
-                              .resetTypeFilters();
-                          context
-                              .read<WorkoutCubit>()
-                              .setDifficultyFilter(null);
-                          context
-                              .read<WorkoutCubit>()
-                              .setSearchQuery('');
-                        },
-                        child: const Text('Limpiar filtros'),
-                      ),
+                      if (!hasLoadedDays) ...[
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<WorkupsCubit>().loadWorkupDays();
+                          },
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
                     ],
                   ),
                 );
@@ -152,8 +157,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 itemCount: workouts.length,
                 itemBuilder: (context, index) {
-                  final workout = workouts[index];
-                  return _buildWorkoutCard(context, workout);
+                  final workupDay = workouts[index];
+                  return _buildWorkupDayCard(context, workupDay);
                 },
               );
             }),
@@ -165,7 +170,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
 
   Widget _buildFilters() {
     final theme = Theme.of(context);
-    final state = context.watch<WorkoutCubit>().state;
+    final state = context.watch<WorkupsCubit>().state;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -186,28 +191,28 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
               children: [
                 _buildTypeFilterChip(
                   'Endurance',
-                  WorkoutType.endurance,
-                  state.selectedTypes.contains(WorkoutType.endurance),
+                  WorkupType.endurance,
+                  state.selectedTypes.contains(WorkupType.endurance),
                 ),
                 _buildTypeFilterChip(
                   'Powerlifting',
-                  WorkoutType.powerlifting,
-                  state.selectedTypes.contains(WorkoutType.powerlifting),
+                  WorkupType.powerlifting,
+                  state.selectedTypes.contains(WorkupType.powerlifting),
                 ),
                 _buildTypeFilterChip(
                   'CrossFit',
-                  WorkoutType.crossfit,
-                  state.selectedTypes.contains(WorkoutType.crossfit),
+                  WorkupType.crossfit,
+                  state.selectedTypes.contains(WorkupType.crossfit),
                 ),
                 _buildTypeFilterChip(
                   'Halterofilia',
-                  WorkoutType.weightlifting,
-                  state.selectedTypes.contains(WorkoutType.weightlifting),
+                  WorkupType.weightlifting,
+                  state.selectedTypes.contains(WorkupType.weightlifting),
                 ),
                 _buildTypeFilterChip(
                   'Musculación',
-                  WorkoutType.bodybuilding,
-                  state.selectedTypes.contains(WorkoutType.bodybuilding),
+                  WorkupType.bodybuilding,
+                  state.selectedTypes.contains(WorkupType.bodybuilding),
                 ),
               ],
             ),
@@ -246,13 +251,13 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                 OutlinedButton(
                   onPressed: () {
                     context
-                        .read<WorkoutCubit>()
+                        .read<WorkupsCubit>()
                         .resetTypeFilters();
                     context
-                        .read<WorkoutCubit>()
+                        .read<WorkupsCubit>()
                         .setDifficultyFilter(null);
                     context
-                        .read<WorkoutCubit>()
+                        .read<WorkupsCubit>()
                         .setSearchQuery('');
                     _searchController.clear();
                   },
@@ -271,7 +276,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
     );
   }
 
-  Widget _buildTypeFilterChip(String label, WorkoutType type, bool isSelected) {
+  Widget _buildTypeFilterChip(String label, WorkupType type, bool isSelected) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -280,7 +285,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
         label: Text(label),
         selected: isSelected,
         onSelected: (selected) {
-          context.read<WorkoutCubit>().toggleTypeFilter(type);
+          context.read<WorkupsCubit>().toggleTypeFilter(type);
         },
         backgroundColor: theme.colorScheme.surface,
         selectedColor: theme.colorScheme.primary.withOpacity(0.2),
@@ -306,7 +311,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
         selected: isSelected,
         onSelected: (selected) {
           context
-              .read<WorkoutCubit>()
+              .read<WorkupsCubit>()
               .setDifficultyFilter(selected ? difficulty : null);
         },
         backgroundColor: theme.colorScheme.surface,
@@ -324,7 +329,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
   Color _getDifficultyColor(DifficultyLevel difficulty, ThemeData theme) {
     switch (difficulty) {
       case DifficultyLevel.basic:
-        return Colors.green;
+         return Colors.green;
       case DifficultyLevel.intermediate:
         return Colors.orange;
       case DifficultyLevel.elite:
@@ -332,12 +337,12 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
     }
   }
 
-  Widget _buildWorkoutCard(BuildContext context, Workout workout) {
+  Widget _buildWorkupDayCard(BuildContext context, WorkupDay workupDay) {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () {
-        context.read<WorkoutCubit>().selectWorkout(workout.id);
-        context.pushNamed('workout-detail');
+        context.read<WorkupsCubit>().selectWorkupDay(workupDay.dayNumber);
+        context.pushNamed('workup-day-detail');
       },
       child: Card(
         margin: const EdgeInsets.only(bottom: 16),
@@ -355,7 +360,6 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                 topRight: Radius.circular(16),
               ),
               child: Image.network(
-                workout.imageUrl ??
                     "https://pixabay.com/get/g8ba5e8c41aa0548f299dd6bbdaa01a0f2e30fb8076d56ecc7c4cbe2b469570e00b43c151a0d89fce219400b9f6893714932c903edfe776a600689f070ea801e2_1280.jpg",
                 height: 150,
                 width: double.infinity,
@@ -390,14 +394,13 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getWorkoutTypeColor(workout.type, theme)
-                              .withOpacity(0.1),
+                          color: _getWorkupTypeColor(workupDay.type, theme).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          workout.getWorkoutTypeText(),
+                          workupDay.type.name.toUpperCase(),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: _getWorkoutTypeColor(workout.type, theme),
+                            color: _getWorkupTypeColor(workupDay.type, theme),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -409,15 +412,13 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getDifficultyColor(workout.difficulty, theme)
-                              .withOpacity(0.1),
+                          color: _getDifficultyColor(workupDay.difficulty, theme).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          workout.getDifficultyText(),
+                          workupDay.difficulty.name.toUpperCase(),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color:
-                                _getDifficultyColor(workout.difficulty, theme),
+                            color: _getDifficultyColor(workupDay.difficulty, theme),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -427,16 +428,16 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                   const SizedBox(height: 8),
                   // Workout name
                   Text(
-                    workout.name,
+                    workupDay.title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
                   // Workout description
-                  if (workout.description != null)
+                  if (workupDay.description.isNotEmpty)
                     Text(
-                      workout.description!,
+                      workupDay.description,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
@@ -446,7 +447,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
                   const SizedBox(height: 12),
                   // Preview exercises
                   Text(
-                    'Incluye: ${workout.wod.exercises.length} ejercicios',
+                    'Incluye: ${_getTotalExercises(workupDay)} ejercicios',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -460,17 +461,97 @@ class _WorkoutListScreenState extends State<WorkoutListScreen>
     );
   }
 
-  Color _getWorkoutTypeColor(WorkoutType type, ThemeData theme) {
+  int _getTotalExercises(WorkupDay day) {
+    int n = 0;
+    final warmUp = day.warmUp;
+    if (warmUp != null) {
+      for (final w in warmUp) {
+        n += _countWarmUpSegment(w);
+      }
+    }
+    for (final block in day.blocks) {
+      n += _countBlockSegment(block);
+    }
+    return n;
+  }
+
+  bool _isRestMovement(String? movement) {
+    if (movement == null || movement.isEmpty) return false;
+    return movement.toLowerCase() == 'rest';
+  }
+
+  int _countWarmUpSegment(WarmUp w) {
+    final nested = w.exercises;
+    if (nested != null && nested.isNotEmpty) {
+      return nested.where((e) => !_isRestMovement(e.movement)).length;
+    }
+    if (_isRestMovement(w.movement)) return 0;
+    if (w.movement != null && w.movement!.isNotEmpty) return 1;
+    return 0;
+  }
+
+  /// Un [BlockExercise]: fila simple, intervalo impar/par, o complex con varios movimientos.
+  int _countBlockExerciseRow(BlockExercise be) {
+    final sub = be.movements;
+    if (sub != null && sub.isNotEmpty) {
+      return sub.where((m) => !_isRestMovement(m.movement)).length;
+    }
+    if (_isRestMovement(be.movement)) return 0;
+    if (be.movement != null && be.movement!.isNotEmpty) return 1;
+    return 0;
+  }
+
+  int _countPartExerciseRow(PartExercise pe) {
+    if (_isRestMovement(pe.movement)) return 0;
+    if (pe.movement != null && pe.movement!.isNotEmpty) return 1;
+    return 0;
+  }
+
+  /// Cada [Part] puede ser un mini-bloque con lista o una sola línea (p. ej. descanso o un movimiento).
+  int _countPartSegment(Part part) {
+    final rows = part.exercises;
+    if (rows != null && rows.isNotEmpty) {
+      return rows.fold<int>(0, (s, pe) => s + _countPartExerciseRow(pe));
+    }
+    if (_isRestMovement(part.movement)) return 0;
+    if (part.movement != null && part.movement!.isNotEmpty) return 1;
+    return 0;
+  }
+
+  int _countBlockSegment(Block block) {
+    // Día 10: "movements": ["clean_and_jerk"] + "ladder" → un solo ejercicio con progresión de cargas.
+    final topMovements = block.movements;
+    if (topMovements != null && topMovements.isNotEmpty) {
+      return topMovements.length;
+    }
+
+    int n = 0;
+    final exercises = block.exercises;
+    if (exercises != null) {
+      for (final be in exercises) {
+        n += _countBlockExerciseRow(be);
+      }
+    }
+    final parts = block.parts;
+    if (parts != null) {
+      for (final part in parts) {
+        n += _countPartSegment(part);
+      }
+    }
+    return n;
+  }
+
+  Color _getWorkupTypeColor(WorkupType type, ThemeData theme) {
     switch (type) {
-      case WorkoutType.endurance:
+      case WorkupType.endurance:
         return Colors.blue;
-      case WorkoutType.powerlifting:
+      case WorkupType.powerlifting:
         return Colors.purple;
-      case WorkoutType.crossfit:
+      case WorkupType.crossfit:
         return Colors.red;
-      case WorkoutType.weightlifting:
+      case WorkupType.weightlifting:
         return Colors.orange;
-      case WorkoutType.bodybuilding:
+      case WorkupType.bodybuilding:
         return Colors.teal;
     }
   }
