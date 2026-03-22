@@ -23,6 +23,7 @@ import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_list_scr
 import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:IAEntrenar/features/workout/presentation/screens/workout_detail_screen.dart';
 import 'package:IAEntrenar/features/workout/presentation/screens/workout_list_screen.dart';
+import 'package:IAEntrenar/features/workout/presentation/screens/workup_day_detail_screen.dart';
 import 'package:IAEntrenar/features/progress/presentation/screens/fitness_tracker_screen.dart';
 import 'router_notifier.dart';
 import 'route_logging_observer.dart';
@@ -220,6 +221,16 @@ final GoRouter appRouter = GoRouter(
       name: 'workout-detail',
       pageBuilder: (context, state) => const CustomTransitionPage(
         child: WorkoutDetailScreen(),
+        transitionsBuilder: _slideLeftTransition,
+      ),
+    ),
+
+    /// Detalle de un día del programa (WorkupDay desde Firestore / WorkupsCubit)
+    GoRoute(
+      path: '/workup-day-detail',
+      name: 'workup-day-detail',
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: WorkupDayDetailScreen(),
         transitionsBuilder: _slideLeftTransition,
       ),
     ),
