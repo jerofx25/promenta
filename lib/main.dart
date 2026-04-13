@@ -1,3 +1,6 @@
+import 'package:IAEntrenar/features/workout/application/workups_cubit.dart';
+import 'package:IAEntrenar/features/workout/infrastructure/datasources/workups_firestore_datasource.dart';
+import 'package:IAEntrenar/features/workout/infrastructure/repositories/workups_firestore_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -64,6 +67,8 @@ void main() async {
       LocalProgressRepository(LocalProgressDataSource());
   final metricsDataSource = FirestoreMetricsDataSource();
   final metricsRepository = FirestoreMetricsRepository(metricsDataSource);
+  final workoutFirestoreDatasource = WorkupsFirestoreDatasource();
+  final workoutFirestoreRepository = WorkupsFirestoreRepository(workoutFirestoreDatasource);
 
   runApp(
     MultiProvider(
@@ -75,12 +80,17 @@ void main() async {
         Provider<RecipeRepository>.value(value: recipeRepository),
         Provider<ProgressRepository>.value(value: progressRepository),
         Provider<MetricsRepository>.value(value: metricsRepository),
+        Provider<WorkupsFirestoreRepository>.value(value: workoutFirestoreRepository,),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider<AuthBloc>(
             create: (context) => AuthBloc(authRepository: authRepository)
               ..add(const AuthStarted()),
+          ),
+          BlocProvider<WorkupsCubit>(
+            create: (_) => WorkupsCubit(workupsRepository: workoutFirestoreRepository)
+              ..loadWorkupDays(),
           ),
           BlocProvider<OnboardingCubit>(
             create: (context) =>

@@ -4,35 +4,14 @@ import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:insta_assets_picker/insta_assets_picker.dart';
 import 'package:IAEntrenar/blocs/onboarding/onboarding_cubit.dart';
 import 'package:IAEntrenar/blocs/onboarding/onboarding_state.dart';
 import 'package:IAEntrenar/core/ui/buttons.dart';
 import 'package:IAEntrenar/core/ui/alerts.dart';
 import 'package:IAEntrenar/core/ui/pending_profile_snackbar.dart';
+import 'package:IAEntrenar/core/ui/photo_picker.dart';
 import 'package:IAEntrenar/core/ui/sleek_spinner.dart';
 import 'package:IAEntrenar/repositories/auth_repository.dart';
-
-/// Texto del selector de fotos en español.
-class _SpanishAssetPickerTextDelegate extends EnglishAssetPickerTextDelegate {
-  const _SpanishAssetPickerTextDelegate();
-
-  @override
-  String get confirm => 'Confirmar';
-
-  @override
-  String get cancel => 'Cancelar';
-
-  @override
-  String get goToSystemSettings => 'Ir a configuración';
-
-  @override
-  String get accessLimitedAssets => 'Continuar con acceso limitado';
-
-  @override
-  String get unableToAccessAll =>
-      'No se puede acceder a todos los archivos. Ve a configuración del sistema.';
-}
 
 /// Controller que difiere [forward] al siguiente frame solo durante build,
 /// para evitar setState/markNeedsBuild cuando flutter_animate llama forward() en didUpdateWidget.
@@ -97,32 +76,16 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen>
 
   Future<void> _pickImage() async {
     try {
-      await InstaAssetPicker.pickAssets(
-        context,
-        maxAssets: 1,
-        pickerConfig: InstaAssetPickerConfig(
-          textDelegate: const _SpanishAssetPickerTextDelegate(),
-          closeOnComplete: true,
-        ),
-        onCompleted: (Stream<InstaAssetsExportDetails> exportDetails) {
-          exportDetails.listen((details) {
-            if (details.data.isNotEmpty && details.data.first.croppedFile != null) {
-              final file = details.data.first.croppedFile!;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  setState(() {
-                    _selectedFile = file;
-                    _hasSelectedImage = true;
-                    _imageUrl = file.path;
-                  });
-                }
-              });
-            }
-          });
-        },
-      );
-    } catch (e) {
-      debugPrint('Error picking image: $e');
+      final file = await pickProfilePhoto(context);
+      if (!mounted) return;
+      if (file != null) {
+        setState(() {
+          _selectedFile = file;
+          _hasSelectedImage = true;
+          _imageUrl = file.path;
+        });
+      }
+    } catch (_) {
       if (mounted) {
         AppAlerts.showError(
           context,
