@@ -2,9 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:IAEntrenar/blocs/auth/auth_bloc.dart';
+import 'package:IAEntrenar/core/ui/alerts.dart';
+import 'package:IAEntrenar/core/ui/photo_picker.dart';
+import 'package:IAEntrenar/repositories/auth_repository.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isUploadingPhoto = false;
+
+  Future<void> _onPhotoTap() async {
+    if (_isUploadingPhoto) return;
+    try {
+      final file = await pickProfilePhoto(context);
+      if (!mounted || file == null) return;
+      setState(() => _isUploadingPhoto = true);
+      final authRepo = context.read<AuthRepository>();
+      final photoUrl = await authRepo.uploadProfilePhoto(file);
+      await authRepo.updateUserFields({'photoUrl': photoUrl});
+      if (!mounted) return;
+      setState(() => _isUploadingPhoto = false);
+      AppAlerts.showSuccessAtBottom(context, 'Foto de perfil actualizada');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingPhoto = false);
+      AppAlerts.showErrorAtBottom(
+        context,
+        'No se pudo actualizar la foto. Verifica los permisos o intenta de nuevo.',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
             onPressed: () async {
-                context.read<AuthBloc>().add(const AuthSignOutRequested());
+              context.read<AuthBloc>().add(const AuthSignOutRequested());
             },
           )
         ],
@@ -37,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             GestureDetector(
-              onTap: () {},
+              onTap: _onPhotoTap,
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
@@ -50,12 +82,32 @@ class ProfileScreen extends StatelessWidget {
                         ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: const Icon(Icons.camera_alt,
-                        size: 16, color: Colors.white),
-                  )
+                  if (_isUploadingPhoto)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black45,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: theme.colorScheme.primary,
+                      child: const Icon(Icons.camera_alt,
+                          size: 16, color: Colors.white),
+                    )
                 ],
               ),
             ),
