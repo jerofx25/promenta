@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:IAEntrenar/models/workup_day.dart';
 import 'package:IAEntrenar/features/workout/application/workups_cubit.dart';
 import 'package:IAEntrenar/features/workout/application/workups_state.dart';
+import 'package:IAEntrenar/blocs/auth/auth_bloc.dart';
 
 class WorkoutListScreen extends StatefulWidget {
   const WorkoutListScreen({super.key});
@@ -108,7 +109,15 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
-                            context.read<WorkupsCubit>().loadWorkupDays();
+                            final userId =
+                                context.read<AuthBloc>().state.profile?.id;
+                            if (userId != null && userId.isNotEmpty) {
+                              context
+                                  .read<WorkupsCubit>()
+                                  .loadWorkupDaysForUser(userId);
+                            } else {
+                              context.read<WorkupsCubit>().loadWorkupDays();
+                            }
                           },
                           child: const Text('Reintentar'),
                         ),
@@ -124,9 +133,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        hasLoadedDays
-                            ? Icons.search_off
-                            : Icons.fitness_center,
+                        hasLoadedDays ? Icons.search_off : Icons.fitness_center,
                         size: 64,
                         color: theme.colorScheme.primary.withOpacity(0.5),
                       ),
@@ -153,8 +160,12 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
               }
 
               return ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  8 + MediaQuery.of(context).padding.bottom,
+                ),
                 itemCount: workouts.length,
                 itemBuilder: (context, index) {
                   final workupDay = workouts[index];
@@ -250,15 +261,9 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
                 const SizedBox(width: 8),
                 OutlinedButton(
                   onPressed: () {
-                    context
-                        .read<WorkupsCubit>()
-                        .resetTypeFilters();
-                    context
-                        .read<WorkupsCubit>()
-                        .setDifficultyFilter(null);
-                    context
-                        .read<WorkupsCubit>()
-                        .setSearchQuery('');
+                    context.read<WorkupsCubit>().resetTypeFilters();
+                    context.read<WorkupsCubit>().setDifficultyFilter(null);
+                    context.read<WorkupsCubit>().setSearchQuery('');
                     _searchController.clear();
                   },
                   style: OutlinedButton.styleFrom(
@@ -329,7 +334,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
   Color _getDifficultyColor(DifficultyLevel difficulty, ThemeData theme) {
     switch (difficulty) {
       case DifficultyLevel.basic:
-         return Colors.green;
+        return Colors.green;
       case DifficultyLevel.intermediate:
         return Colors.orange;
       case DifficultyLevel.elite:
@@ -360,7 +365,7 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
                 topRight: Radius.circular(16),
               ),
               child: Image.network(
-                    "https://pixabay.com/get/g8ba5e8c41aa0548f299dd6bbdaa01a0f2e30fb8076d56ecc7c4cbe2b469570e00b43c151a0d89fce219400b9f6893714932c903edfe776a600689f070ea801e2_1280.jpg",
+                "https://pixabay.com/get/g8ba5e8c41aa0548f299dd6bbdaa01a0f2e30fb8076d56ecc7c4cbe2b469570e00b43c151a0d89fce219400b9f6893714932c903edfe776a600689f070ea801e2_1280.jpg",
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -394,7 +399,8 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getWorkupTypeColor(workupDay.type, theme).withOpacity(0.1),
+                          color: _getWorkupTypeColor(workupDay.type, theme)
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -412,13 +418,16 @@ class _WorkoutListScreenState extends State<WorkoutListScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getDifficultyColor(workupDay.difficulty, theme).withOpacity(0.1),
+                          color:
+                              _getDifficultyColor(workupDay.difficulty, theme)
+                                  .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           workupDay.difficulty.name.toUpperCase(),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: _getDifficultyColor(workupDay.difficulty, theme),
+                            color: _getDifficultyColor(
+                                workupDay.difficulty, theme),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

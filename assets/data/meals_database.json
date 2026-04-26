@@ -1,0 +1,166 @@
+{
+  "version": "test-v1",
+  "description": "Base de conocimiento local de comidas con calorias y macros aproximados por racion.",
+  "meals": [
+    {
+      "id": "breakfast_greek_yogurt_oats",
+      "category": "breakfast",
+      "name": "Yogur griego con avena, frutos rojos y nueces",
+      "calories": 520,
+      "protein_g": 34,
+      "carbs_g": 55,
+      "fat_g": 18,
+      "ingredients": ["250 g yogur griego 0-2%", "60 g avena", "100 g frutos rojos", "15 g nueces", "10 g miel"]
+    },
+    {
+      "id": "breakfast_eggs_toast_avocado",
+      "category": "breakfast",
+      "name": "Tostadas integrales con huevos y aguacate",
+      "calories": 610,
+      "protein_g": 32,
+      "carbs_g": 48,
+      "fat_g": 31,
+      "ingredients": ["2 huevos", "2 claras", "2 rebanadas pan integral", "80 g aguacate", "tomate"]
+    },
+    {
+      "id": "breakfast_protein_smoothie",
+      "category": "breakfast",
+      "name": "Batido proteico de platano y mantequilla de cacahuete",
+      "calories": 560,
+      "protein_g": 38,
+      "carbs_g": 62,
+      "fat_g": 18,
+      "ingredients": ["30 g proteina whey", "1 platano", "300 ml leche semidesnatada", "20 g mantequilla de cacahuete", "30 g avena"]
+    },
+    {
+      "id": "breakfast_tofu_scramble",
+      "category": "breakfast",
+      "name": "Revuelto de tofu con patata y verduras",
+      "calories": 540,
+      "protein_g": 30,
+      "carbs_g": 58,
+      "fat_g": 20,
+      "ingredients": ["200 g tofu firme", "250 g patata cocida", "pimiento", "espinacas", "10 ml aceite de oliva"]
+    },
+    {
+      "id": "lunch_chicken_rice_bowl",
+      "category": "lunch",
+      "name": "Bowl de pollo, arroz integral y verduras",
+      "calories": 780,
+      "protein_g": 55,
+      "carbs_g": 88,
+      "fat_g": 20,
+      "ingredients": ["180 g pechuga de pollo", "250 g arroz integral cocido", "150 g verduras", "15 ml aceite de oliva"]
+    },
+    {
+      "id": "lunch_salmon_quinoa",
+      "category": "lunch",
+      "name": "Salmon con quinoa y ensalada verde",
+      "calories": 820,
+      "protein_g": 50,
+      "carbs_g": 66,
+      "fat_g": 36,
+      "ingredients": ["170 g salmon", "220 g quinoa cocida", "ensalada verde", "10 ml aceite de oliva", "limon"]
+    },
+    {
+      "id": "lunch_turkey_pasta",
+      "category": "lunch",
+      "name": "Pasta integral con pavo y salsa de tomate",
+      "calories": 760,
+      "protein_g": 52,
+      "carbs_g": 95,
+      "fat_g": 16,
+      "ingredients": ["120 g pasta integral seca", "160 g pavo picado magro", "salsa de tomate", "parmesano"]
+    },
+    {
+      "id": "lunch_lentil_bowl",
+      "category": "lunch",
+      "name": "Bowl de lentejas, arroz y verduras asadas",
+      "calories": 720,
+      "protein_g": 34,
+      "carbs_g": 108,
+      "fat_g": 16,
+      "ingredients": ["250 g lentejas cocidas", "180 g arroz cocido", "verduras asadas", "15 ml aceite de oliva"]
+    },
+    {
+      "id": "dinner_lean_beef_potato",
+      "category": "dinner",
+      "name": "Ternera magra con patata asada y verduras",
+      "calories": 700,
+      "protein_g": 55,
+      "carbs_g": 62,
+      "fat_g": 24,
+      "ingredients": ["170 g ternera magra", "300 g patata", "200 g verduras", "10 ml aceite de oliva"]
+    },
+    {
+      "id": "dinner_cod_couscous",
+      "category": "dinner",
+      "name": "Bacalao con cuscus y verduras",
+      "calories": 610,
+      "protein_g": 50,
+      "carbs_g": 72,
+      "fat_g": 10,
+      "ingredients": ["200 g bacalao", "220 g cuscus cocido", "verduras salteadas", "10 ml aceite de oliva"]
+    },
+    {
+      "id": "dinner_chicken_wrap",
+      "category": "dinner",
+      "name": "Wrap integral de pollo, hummus y ensalada",
+      "calories": 660,
+      "protein_g": 48,
+      "carbs_g": 70,
+      "fat_g": 20,
+      "ingredients": ["2 tortillas integrales", "160 g pollo", "40 g hummus", "ensalada", "yogur natural"]
+    },
+    {
+      "id": "dinner_tofu_noodles",
+      "category": "dinner",
+      "name": "Noodles de arroz con tofu y verduras",
+      "calories": 680,
+      "protein_g": 32,
+      "carbs_g": 92,
+      "fat_g": 22,
+      "ingredients": ["180 g tofu", "100 g noodles de arroz secos", "verduras", "salsa de soja", "10 ml aceite de sesamo"]
+    },
+    {
+      "id": "snack_cottage_fruit",
+      "category": "snack",
+      "name": "Queso cottage con fruta",
+      "calories": 280,
+      "protein_g": 28,
+      "carbs_g": 30,
+      "fat_g": 5,
+      "ingredients": ["200 g queso cottage", "1 manzana", "canela"]
+    },
+    {
+      "id": "snack_protein_bar_banana",
+      "category": "snack",
+      "name": "Barrita proteica y platano",
+      "calories": 330,
+      "protein_g": 22,
+      "carbs_g": 48,
+      "fat_g": 7,
+      "ingredients": ["1 barrita proteica", "1 platano"]
+    },
+    {
+      "id": "snack_hummus_pita",
+      "category": "snack",
+      "name": "Hummus con pan pita integral",
+      "calories": 360,
+      "protein_g": 14,
+      "carbs_g": 52,
+      "fat_g": 12,
+      "ingredients": ["70 g hummus", "1 pan pita integral", "zanahoria"]
+    },
+    {
+      "id": "snack_whey_oats",
+      "category": "snack",
+      "name": "Whey con avena instantanea",
+      "calories": 310,
+      "protein_g": 32,
+      "carbs_g": 34,
+      "fat_g": 5,
+      "ingredients": ["30 g proteina whey", "40 g avena instantanea", "agua o leche"]
+    }
+  ]
+}

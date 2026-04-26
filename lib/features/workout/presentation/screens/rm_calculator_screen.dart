@@ -13,12 +13,13 @@ import 'package:IAEntrenar/features/workout/application/exercise_state.dart';
 import 'package:IAEntrenar/core/ui/alerts.dart';
 import 'package:IAEntrenar/models/exercise.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RMCalculatorScreen extends StatefulWidget {
   const RMCalculatorScreen({super.key});
 
   @override
-  _RMCalculatorScreenState createState() => _RMCalculatorScreenState();
+  State<RMCalculatorScreen> createState() => _RMCalculatorScreenState();
 }
 
 class _RMCalculatorScreenState extends State<RMCalculatorScreen>
@@ -40,6 +41,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
   String? _metricDisplayName;
   CapacityType? _metricCapacityType;
   MetricUnit? _metricUnit;
+
   /// Unidad elegida al actualizar (solo tiempo: seg/min/h). Null = usar _metricUnit.
   MetricUnit? _metricUpdateUnit;
 
@@ -77,7 +79,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
   }
 
   /// Un ejercicio por cada (exerciseKey, capacityType) distinto; excluye strength (RM está en ExerciseCubit).
-  List<FitnessMetricRecord> _distinctMetricExercises(List<FitnessMetricRecord> metrics) {
+  List<FitnessMetricRecord> _distinctMetricExercises(
+      List<FitnessMetricRecord> metrics) {
     final seen = <String>{};
     final out = <FitnessMetricRecord>[];
     for (final m in metrics) {
@@ -101,8 +104,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
         .where((m) =>
             m.exerciseKey == exerciseKey && m.capacityType == capacityType)
         .map((m) => (value: m.value, date: m.recordedAt))
-        .where((e) =>
-            !e.date.isBefore(_startDate) && !e.date.isAfter(_endDate))
+        .where((e) => !e.date.isBefore(_startDate) && !e.date.isAfter(_endDate))
         .toList();
     list.sort((a, b) => _filterType.contains('asc')
         ? a.date.compareTo(b.date)
@@ -123,14 +125,25 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
     final nameController = TextEditingController();
     final weightController = TextEditingController();
     MetricUnit selectedUnit = MetricUnit.kg;
+    bool unitLoaded = false;
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
+          if (!unitLoaded) {
+            unitLoaded = true;
+            SharedPreferences.getInstance().then((prefs) {
+              final saved = prefs.getString('settings_default_weight_unit_v1');
+              final parsed = MetricUnit.fromFirestore(saved);
+              if (parsed != null && parsed.isWeight) {
+                setDialogState(() => selectedUnit = parsed);
+              }
+            });
+          }
           return AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text(
               'Añadir Ejercicio (RM)',
               style: Theme.of(context).textTheme.titleLarge,
@@ -143,27 +156,27 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                 children: [
                   TextField(
                     controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nombre del Ejercicio',
-                    prefixIcon: Icon(
-                      Icons.fitness_center,
-                      color: Theme.of(context).colorScheme.primary,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre del Ejercicio',
+                      prefixIcon: Icon(
+                        Icons.fitness_center,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: weightController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Peso Máximo (RM)',
-                    suffixText: selectedUnit == MetricUnit.kg ? 'kg' : 'lb',
-                    prefixIcon: Icon(
-                      Icons.monitor_weight,
-                      color: Theme.of(context).colorScheme.primary,
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: weightController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Peso Máximo (RM)',
+                      suffixText: selectedUnit == MetricUnit.kg ? 'kg' : 'lb',
+                      prefixIcon: Icon(
+                        Icons.monitor_weight,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -173,33 +186,34 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       SegmentedButton<MetricUnit>(
-                      segments: const [
-                        ButtonSegment(
-                            value: MetricUnit.kg,
-                            label: Text('kg'),
-                            icon: Icon(Icons.straighten, size: 18)),
-                        ButtonSegment(
-                            value: MetricUnit.lb,
-                            label: Text('lb'),
-                            icon: Icon(Icons.monitor_weight_outlined, size: 18)),
-                      ],
-                      selected: {selectedUnit},
-                      onSelectionChanged: (Set<MetricUnit> s) {
-                        setDialogState(() => selectedUnit = s.first);
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                        segments: const [
+                          ButtonSegment(
+                              value: MetricUnit.kg,
+                              label: Text('kg'),
+                              icon: Icon(Icons.straighten, size: 18)),
+                          ButtonSegment(
+                              value: MetricUnit.lb,
+                              label: Text('lb'),
+                              icon: Icon(Icons.monitor_weight_outlined,
+                                  size: 18)),
+                        ],
+                        selected: {selectedUnit},
+                        onSelectionChanged: (Set<MetricUnit> s) {
+                          setDialogState(() => selectedUnit = s.first);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text(
                   'Cancelar',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.secondary),
                 ),
               ),
               ElevatedButton(
@@ -220,12 +234,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                   try {
                     final value = double.parse(weightText);
                     final weightKg = selectedUnit == MetricUnit.lb
-                        ? context
-                            .read<MetricsCubit>()
-                            .convertWeight(
-                                value: value,
-                                fromUnit: MetricUnit.lb,
-                                toUnit: MetricUnit.kg,
+                        ? context.read<MetricsCubit>().convertWeight(
+                              value: value,
+                              fromUnit: MetricUnit.lb,
+                              toUnit: MetricUnit.kg,
                             )
                         : value;
                     context.read<ExerciseCubit>().addExercise(name, weightKg);
@@ -334,7 +346,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
   void _showAddOtherMetricSheet() {
     final userId = context.read<AuthBloc>().state.profile?.id;
     if (userId == null || userId.isEmpty) {
-      AppAlerts.showInfo(context, 'Inicia sesión para guardar métricas en la nube');
+      AppAlerts.showInfo(
+          context, 'Inicia sesión para guardar métricas en la nube');
       return;
     }
 
@@ -371,122 +384,128 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                 children: [
                   Text(
                     'Añadir métrica de capacidad',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Registra resistencia, velocidad, movilidad o cardio. Se guarda en la nube y alimenta tu perfil.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Registra resistencia, velocidad, movilidad o cardio. Se guarda en la nube y alimenta tu perfil.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
+                        ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<CapacityType>(
-                  value: selectedType,
-                  decoration: const InputDecoration(
-                    labelText: 'Tipo de capacidad',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: CapacityType.values
-                      .where((t) => t != CapacityType.strength)
-                      .map((t) => DropdownMenuItem(
-                            value: t,
-                            child: Text(t.displayName),
-                          ))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) {
-                      setSheetState(() {
-                        selectedType = v;
-                        selectedUnit = _unitsForCapacity(v).first;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ejercicio o prueba (ej: Push-ups, 5K run)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: valueController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Valor',
-                    suffixText: _unitLabel(selectedUnit),
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<MetricUnit>(
-                  value: selectedUnit,
-                  decoration: const InputDecoration(
-                    labelText: 'Unidad',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: units
-                      .map((u) => DropdownMenuItem(
-                            value: u,
-                            child: Text(_unitLabel(u)),
-                          ))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) setSheetState(() => selectedUnit = v);
-                  },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(sheetContext),
-                      child: const Text('Cancelar'),
+                  const SizedBox(height: 20),
+                  DropdownButtonFormField<CapacityType>(
+                    value: selectedType,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo de capacidad',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          final name = nameController.text.trim();
-                          final valueText = valueController.text.trim();
-                          if (name.isEmpty || valueText.isEmpty) {
-                            AppAlerts.showWarning(
-                                context, 'Completa nombre y valor');
-                            return;
-                          }
-                          try {
-                            final value = double.parse(valueText);
-                            final key = _exerciseKeyFromName(name);
-                            if (key.isEmpty) {
+                    items: CapacityType.values
+                        .where((t) => t != CapacityType.strength)
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(t.displayName),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setSheetState(() {
+                          selectedType = v;
+                          selectedUnit = _unitsForCapacity(v).first;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Ejercicio o prueba (ej: Push-ups, 5K run)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: valueController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Valor',
+                      suffixText: _unitLabel(selectedUnit),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<MetricUnit>(
+                    value: selectedUnit,
+                    decoration: const InputDecoration(
+                      labelText: 'Unidad',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: units
+                        .map((u) => DropdownMenuItem(
+                              value: u,
+                              child: Text(_unitLabel(u)),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) setSheetState(() => selectedUnit = v);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        child: const Text('Cancelar'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            final name = nameController.text.trim();
+                            final valueText = valueController.text.trim();
+                            if (name.isEmpty || valueText.isEmpty) {
                               AppAlerts.showWarning(
-                                  context, 'Nombre no válido para clave');
+                                  context, 'Completa nombre y valor');
                               return;
                             }
-                            context.read<MetricsCubit>().saveMetric(
-                                  userId: userId,
-                                  capacityType: selectedType,
-                                  exerciseKey: key,
-                                  exerciseDisplayName: name,
-                                  value: value,
-                                  unit: selectedUnit,
-                                );
-                            Navigator.pop(sheetContext);
-                            AppAlerts.showSuccess(context, 'Métrica guardada');
-                          } catch (e) {
-                            AppAlerts.showError(context, 'Valor no válido: $e');
-                          }
-                        },
-                        child: const Text('Guardar'),
+                            try {
+                              final value = double.parse(valueText);
+                              final key = _exerciseKeyFromName(name);
+                              if (key.isEmpty) {
+                                AppAlerts.showWarning(
+                                    context, 'Nombre no válido para clave');
+                                return;
+                              }
+                              context.read<MetricsCubit>().saveMetric(
+                                    userId: userId,
+                                    capacityType: selectedType,
+                                    exerciseKey: key,
+                                    exerciseDisplayName: name,
+                                    value: value,
+                                    unit: selectedUnit,
+                                  );
+                              Navigator.pop(sheetContext);
+                              AppAlerts.showSuccess(
+                                  context, 'Métrica guardada');
+                            } catch (e) {
+                              AppAlerts.showError(
+                                  context, 'Valor no válido: $e');
+                            }
+                          },
+                          child: const Text('Guardar'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -552,7 +571,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
             return BlocBuilder<ExerciseCubit, ExerciseState>(
               builder: (context, state) {
                 final selectedExercise = state.selectedExercise;
-                final metricExercises = _distinctMetricExercises(metricsState.metrics);
+                final metricExercises =
+                    _distinctMetricExercises(metricsState.metrics);
                 final hasStrength = state.exercises.isNotEmpty;
                 final hasMetricSelected = _metricExerciseKey != null;
 
@@ -633,7 +653,9 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
 
                 if (selectedExercise == null) {
                   if (state.exercises.isNotEmpty) {
-                    context.read<ExerciseCubit>().selectExercise(state.exercises.first.id);
+                    context
+                        .read<ExerciseCubit>()
+                        .selectExercise(state.exercises.first.id);
                     return const Center(child: CircularProgressIndicator());
                   }
                   // Solo métricas: mostrar selector y mensaje hasta que el usuario elija
@@ -668,8 +690,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                                     padding: const EdgeInsets.all(24.0),
                                     child: Text(
                                       'Selecciona un ejercicio del desplegable para ver progreso y tabla',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface
+                                            .withOpacity(0.7),
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -684,10 +708,11 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                   );
                 }
 
-                final progressData = context.read<ExerciseCubit>().getProgressForExercise(
-                      selectedExercise.id,
-                      ascending: _filterType.contains('asc'),
-                    );
+                final progressData =
+                    context.read<ExerciseCubit>().getProgressForExercise(
+                          selectedExercise.id,
+                          ascending: _filterType.contains('asc'),
+                        );
                 final percentages = context
                     .read<ExerciseCubit>()
                     .calculateRMPercentages(selectedExercise.maxWeight);
@@ -753,8 +778,11 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
     );
   }
 
-  String _currentDropdownLabel(ExerciseState state, List<FitnessMetricRecord> metricExercises) {
-    if (_metricExerciseKey != null && _metricDisplayName != null && _metricCapacityType != null) {
+  String _currentDropdownLabel(
+      ExerciseState state, List<FitnessMetricRecord> metricExercises) {
+    if (_metricExerciseKey != null &&
+        _metricDisplayName != null &&
+        _metricCapacityType != null) {
       return '$_metricDisplayName (${_metricCapacityType!.displayName})';
     }
     final e = state.selectedExercise;
@@ -767,13 +795,15 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
     return 'Selecciona un ejercicio';
   }
 
-  Widget _buildExerciseSelector(ExerciseState state, List<FitnessMetricRecord> metricExercises) {
+  Widget _buildExerciseSelector(
+      ExerciseState state, List<FitnessMetricRecord> metricExercises) {
     final theme = Theme.of(context);
     final exercises = state.exercises;
 
     final labels = <String>[
       ...exercises.map((e) => '${e.name} (RM)'),
-      ...metricExercises.map((m) => '${m.exerciseDisplayName} (${m.capacityType.displayName})'),
+      ...metricExercises.map(
+          (m) => '${m.exerciseDisplayName} (${m.capacityType.displayName})'),
     ];
     if (labels.isEmpty) labels.add('Selecciona un ejercicio');
 
@@ -817,7 +847,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
             ),
             onChanged: (String? selectedLabel) {
               if (selectedLabel == null) return;
-              final rmMatch = exercises.where((e) => '${e.name} (RM)' == selectedLabel);
+              final rmMatch =
+                  exercises.where((e) => '${e.name} (RM)' == selectedLabel);
               if (rmMatch.isNotEmpty) {
                 setState(() {
                   _metricExerciseKey = null;
@@ -832,7 +863,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                 return;
               }
               final metricMatch = metricExercises.where((m) =>
-                  '${m.exerciseDisplayName} (${m.capacityType.displayName})' == selectedLabel);
+                  '${m.exerciseDisplayName} (${m.capacityType.displayName})' ==
+                  selectedLabel);
               if (metricMatch.isNotEmpty) {
                 final m = metricMatch.first;
                 final metrics = context.read<MetricsCubit>().state.metrics;
@@ -841,8 +873,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                         e.exerciseKey == m.exerciseKey &&
                         e.capacityType == m.capacityType)
                     .toList();
-                forExercise.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
-                final latestValue = forExercise.isEmpty ? m.value : forExercise.first.value;
+                forExercise
+                    .sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+                final latestValue =
+                    forExercise.isEmpty ? m.value : forExercise.first.value;
                 setState(() {
                   _metricExerciseKey = m.exerciseKey;
                   _metricDisplayName = m.exerciseDisplayName;
@@ -851,8 +885,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                   final isTime = m.capacityType == CapacityType.speed ||
                       m.capacityType == CapacityType.cardio;
                   _metricUpdateUnit = isTime ? m.unit : null;
-                  _metricValueController.text = latestValue.toStringAsFixed(
-                      m.unit == MetricUnit.score ? 1 : 0);
+                  _metricValueController.text = latestValue
+                      .toStringAsFixed(m.unit == MetricUnit.score ? 1 : 0);
                 });
               }
             },
@@ -863,10 +897,13 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
   }
 
   static bool _isTimeUnit(MetricUnit u) =>
-      u == MetricUnit.seconds || u == MetricUnit.minutes || u == MetricUnit.hours;
+      u == MetricUnit.seconds ||
+      u == MetricUnit.minutes ||
+      u == MetricUnit.hours;
 
   /// Convierte valor almacenado (segundos) a la unidad de visualización para tiempo.
-  double _timeValueToDisplayUnit(double valueInSeconds, MetricUnit displayUnit) {
+  double _timeValueToDisplayUnit(
+      double valueInSeconds, MetricUnit displayUnit) {
     switch (displayUnit) {
       case MetricUnit.seconds:
         return valueInSeconds;
@@ -897,18 +934,22 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
       _metricExerciseKey!,
       _metricCapacityType!,
     );
-    final bestRaw = latest.isEmpty ? 0.0 : latest.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    final bestRaw = latest.isEmpty
+        ? 0.0
+        : latest.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final lastValueRaw = latest.isEmpty ? 0.0 : latest.first.value;
     // Para tiempo, mostrar en la unidad elegida; si no, valor crudo.
     final best = isTimeMetric && updateUnit != null && _isTimeUnit(updateUnit)
         ? _timeValueToDisplayUnit(bestRaw, updateUnit)
         : bestRaw;
-    final lastValue = isTimeMetric && updateUnit != null && _isTimeUnit(updateUnit)
-        ? _timeValueToDisplayUnit(lastValueRaw, updateUnit)
-        : lastValueRaw;
-    final displayLabel = isTimeMetric && updateUnit != null && _isTimeUnit(updateUnit)
-        ? updateUnitLabel
-        : (_metricUnit != null ? _unitLabel(_metricUnit!) : '');
+    final lastValue =
+        isTimeMetric && updateUnit != null && _isTimeUnit(updateUnit)
+            ? _timeValueToDisplayUnit(lastValueRaw, updateUnit)
+            : lastValueRaw;
+    final displayLabel =
+        isTimeMetric && updateUnit != null && _isTimeUnit(updateUnit)
+            ? updateUnitLabel
+            : (_metricUnit != null ? _unitLabel(_metricUnit!) : '');
     final decimals = _displayDecimals(updateUnit ?? _metricUnit);
 
     return Container(
@@ -929,7 +970,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
         children: [
           Text(
             '${_metricCapacityType?.displayName ?? ''} - Marca actual',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
@@ -1009,7 +1051,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
               Expanded(
                 child: TextField(
                   controller: _metricValueController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Nuevo valor ($updateUnitLabel)',
                     filled: true,
@@ -1024,7 +1067,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                   if (valueText.isEmpty) return;
                   final userId = context.read<AuthBloc>().state.profile?.id;
                   if (userId == null || userId.isEmpty) {
-                    AppAlerts.showInfo(context, 'Inicia sesión para actualizar métricas');
+                    AppAlerts.showInfo(
+                        context, 'Inicia sesión para actualizar métricas');
                     return;
                   }
                   final unitToUse = _metricUpdateUnit ?? _metricUnit!;
@@ -1040,9 +1084,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                         );
                     if (!mounted) return;
                     _loadUserMetricsIfNeeded();
-                    _metricValueController.text = value.toStringAsFixed(
-                        unitToUse == MetricUnit.score ? 1 : 0);
-                    AppAlerts.showSuccessAtBottom(context, 'Métrica actualizada');
+                    _metricValueController.text = value
+                        .toStringAsFixed(unitToUse == MetricUnit.score ? 1 : 0);
+                    AppAlerts.showSuccessAtBottom(
+                        context, 'Métrica actualizada');
                   } catch (e) {
                     if (!mounted) return;
                     AppAlerts.showError(context, 'Valor no válido: $e');
@@ -1335,6 +1380,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                   final d = progressData[i].date;
                   return DateTime(d.year, d.month, d.day);
                 }
+
                 final indicesToShow = <int>[];
                 for (int i = 0; i < progressData.length; i++) {
                   if (i == 0 || dayOf(i) != dayOf(i - 1)) {
@@ -1419,8 +1465,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                       LineChartBarData(
                         spots: spots.map((spot) {
                           final y = spot.y.clamp(minY, maxY);
-                          return FlSpot(spot.x,
-                              minY + (y - minY) * _animation.value);
+                          return FlSpot(
+                              spot.x, minY + (y - minY) * _animation.value);
                         }).toList(),
                         isCurved: true,
                         color: theme.colorScheme.primary,
@@ -1520,14 +1566,19 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
 
     final values = progressList.map((e) => e.value).toList();
     final minY = 0.0;
-    final maxY = (values.reduce((a, b) => a > b ? a : b) * 1.15).clamp(10.0, double.infinity);
-    final spots = progressList.asMap().entries.map((e) =>
-        FlSpot(e.key.toDouble(), e.value.value)).toList();
+    final maxY = (values.reduce((a, b) => a > b ? a : b) * 1.15)
+        .clamp(10.0, double.infinity);
+    final spots = progressList
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
+        .toList();
 
     int dayOf(int i) {
       final d = progressList[i].date;
       return DateTime(d.year, d.month, d.day).millisecondsSinceEpoch;
     }
+
     final indicesToShow = <int>[];
     for (int i = 0; i < progressList.length; i++) {
       if (i == 0 || dayOf(i) != dayOf(i - 1)) indicesToShow.add(i);
@@ -1563,7 +1614,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
         children: [
           Text(
             'Progreso (${_metricCapacityType?.displayName ?? ''})',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           Text(
             'Eje vertical: $_metricDisplayName en ${_unitLabel(_metricUnit ?? MetricUnit.reps)}',
@@ -1617,8 +1669,10 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
@@ -1675,8 +1729,7 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
     );
   }
 
-  Widget _buildMetricTable(
-      List<({double value, DateTime date})> progressList) {
+  Widget _buildMetricTable(List<({double value, DateTime date})> progressList) {
     final theme = Theme.of(context);
     if (progressList.isEmpty) {
       return Container(
@@ -1691,7 +1744,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
         ),
       );
     }
-    final best = progressList.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    final best =
+        progressList.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final last = progressList.first.value;
     final unitLabel = _unitLabel(_metricUnit ?? MetricUnit.reps);
     final entries = [
@@ -1719,7 +1773,8 @@ class _RMCalculatorScreenState extends State<RMCalculatorScreen>
         children: [
           Text(
             'Resumen por ${_metricCapacityType?.displayName ?? ''}',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GridView.builder(
