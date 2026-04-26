@@ -105,6 +105,11 @@ class AppTheme {
           fontSize: 16,
           color: colorScheme.onSurface,
         ),
+        titleSmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: colorScheme.onSurface,
+        ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
           color: colorScheme.onSurface,
@@ -116,6 +121,21 @@ class AppTheme {
         bodySmall: GoogleFonts.poppins(
           fontSize: 12,
           color: colorScheme.onSurface.withOpacity(0.7),
+        ),
+        labelLarge: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        labelMedium: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        labelSmall: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface.withOpacity(0.8),
         ),
       ),
       cardTheme: CardThemeData(
@@ -291,6 +311,11 @@ class AppTheme {
           fontSize: 16,
           color: colorScheme.onSurface,
         ),
+        titleSmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: colorScheme.onSurface,
+        ),
         bodyLarge: GoogleFonts.poppins(
           fontSize: 16,
           color: colorScheme.onSurface,
@@ -302,6 +327,21 @@ class AppTheme {
         bodySmall: GoogleFonts.poppins(
           fontSize: 12,
           color: colorScheme.onSurface.withOpacity(0.7),
+        ),
+        labelLarge: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        labelMedium: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        labelSmall: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface.withOpacity(0.8),
         ),
       ),
       cardTheme: CardThemeData(

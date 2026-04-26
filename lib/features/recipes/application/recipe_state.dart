@@ -2,6 +2,12 @@ import 'package:equatable/equatable.dart';
 
 import '../domain/entities/recipe.dart';
 
+class _Unset {
+  const _Unset();
+}
+
+const _unset = _Unset();
+
 class RecipeState extends Equatable {
   final List<Recipe> recipes;
   final Recipe? selectedRecipe;
@@ -30,7 +36,7 @@ class RecipeState extends Equatable {
   RecipeState copyWith({
     List<Recipe>? recipes,
     Recipe? selectedRecipe,
-    MealType? selectedMealType,
+    Object? selectedMealType = _unset,
     String? searchQuery,
     bool? isLoading,
     String? error,
@@ -38,7 +44,9 @@ class RecipeState extends Equatable {
     return RecipeState(
       recipes: recipes ?? this.recipes,
       selectedRecipe: selectedRecipe ?? this.selectedRecipe,
-      selectedMealType: selectedMealType ?? this.selectedMealType,
+      selectedMealType: identical(selectedMealType, _unset)
+          ? this.selectedMealType
+          : selectedMealType as MealType?,
       searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -49,8 +57,7 @@ class RecipeState extends Equatable {
     var result = recipes;
 
     if (selectedMealType != null) {
-      result =
-          result.where((r) => r.mealType == selectedMealType).toList();
+      result = result.where((r) => r.mealType == selectedMealType).toList();
     }
 
     if (searchQuery.isNotEmpty) {
@@ -59,10 +66,7 @@ class RecipeState extends Equatable {
           .where(
             (r) =>
                 r.name.toLowerCase().contains(q) ||
-                r.ingredients
-                    .join(' ')
-                    .toLowerCase()
-                    .contains(q),
+                r.ingredients.join(' ').toLowerCase().contains(q),
           )
           .toList();
     }
@@ -71,7 +75,12 @@ class RecipeState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [recipes, selectedRecipe, selectedMealType, searchQuery, isLoading, error];
+  List<Object?> get props => [
+        recipes,
+        selectedRecipe,
+        selectedMealType,
+        searchQuery,
+        isLoading,
+        error
+      ];
 }
-

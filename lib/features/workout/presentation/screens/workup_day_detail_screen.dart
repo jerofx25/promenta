@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:IAEntrenar/core/ui/alerts.dart';
+import 'package:IAEntrenar/blocs/auth/auth_bloc.dart';
+import 'package:IAEntrenar/features/ai_coach/application/daily_coach_cubit.dart';
+import 'package:IAEntrenar/features/ai_coach/application/daily_coach_state.dart';
+import 'package:IAEntrenar/features/ai_coach/presentation/ai_model_download_banner.dart';
+import 'package:IAEntrenar/features/ai_workout/application/ai_workout_cubit.dart';
+import 'package:IAEntrenar/features/workout/application/exercise_cubit.dart';
 
 import 'package:IAEntrenar/features/workout/application/workups_cubit.dart';
 import 'package:IAEntrenar/features/workout/application/workups_state.dart';
@@ -152,6 +158,14 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
                         ),
                         const SizedBox(height: 16),
 
+                        const AiModelDownloadBanner(
+                          margin: EdgeInsets.only(bottom: 16),
+                        ),
+                        _DailyCoachCard(day: day),
+                        const SizedBox(height: 16),
+                        _AiWorkoutGenerateCard(day: day),
+                        const SizedBox(height: 16),
+
                         // Description
                         if (day.description.isNotEmpty)
                           Column(
@@ -208,11 +222,11 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
 
                           // Tab Content
                           SizedBox(
-                            height: 400, // Fixed height for tab content, can be dynamic but let's stick to the style
+                            height:
+                                400, // Fixed height for tab content, can be dynamic but let's stick to the style
                             child: TabBarView(
                               children: [
-                                if (hasWarmUp)
-                                  _buildWarmUpSection(day.warmUp!),
+                                if (hasWarmUp) _buildWarmUpSection(day.warmUp!),
                                 ...day.blocks.map((b) => _buildBlockSection(b)),
                               ],
                             ),
@@ -269,11 +283,15 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 0,
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest
+              .withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+              color:
+                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
             ),
           ),
           child: Padding(
@@ -311,8 +329,10 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
             child: Text(
               [
                 if (block.format != null) block.format!,
-                if (block.volume != null) '${block.volume} ${block.unit?.name ?? ''}',
-                if (block.repScheme != null) 'Reps: ${block.repScheme!.join('-')}',
+                if (block.volume != null)
+                  '${block.volume} ${block.unit?.name ?? ''}',
+                if (block.repScheme != null)
+                  'Reps: ${block.repScheme!.join('-')}',
               ].join(' • '),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -326,8 +346,7 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
           ...block.exercises!.map((e) => _buildBlockExercise(e)),
 
         // If it has parts
-        if (block.parts != null)
-          ...block.parts!.map((p) => _buildPart(p)),
+        if (block.parts != null) ...block.parts!.map((p) => _buildPart(p)),
 
         // If it has movements + ladder (like Day 10)
         if (block.movements != null && block.ladder != null) ...[
@@ -349,7 +368,10 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -373,8 +395,8 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
               _buildExerciseRow(e.movement!, e.volume, e.unit?.name,
                   notes: e.notes, intensity: e.intensity),
             if (e.movements != null)
-              ...e.movements!.map((m) =>
-                  _buildExerciseRow(m.movement, m.volume, m.unit?.name)),
+              ...e.movements!.map(
+                  (m) => _buildExerciseRow(m.movement, m.volume, m.unit?.name)),
             if (e.notes != null && e.movement == null)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
@@ -393,7 +415,10 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -414,12 +439,13 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             const SizedBox(height: 8),
-            if (p.movement != null)
-              _buildExerciseRow(p.movement!, null, null),
+            if (p.movement != null) _buildExerciseRow(p.movement!, null, null),
             if (p.exercises != null)
               ...p.exercises!.map((pe) => _buildExerciseRow(
                   pe.movement ?? '', pe.volume, pe.unit,
-                  notes: pe.notes, weight: pe.weight, weightUnit: pe.weightUnit)),
+                  notes: pe.notes,
+                  weight: pe.weight,
+                  weightUnit: pe.weightUnit)),
           ],
         ),
       ),
@@ -517,5 +543,394 @@ class _WorkupDayDetailScreenState extends State<WorkupDayDetailScreen> {
       case WorkupType.bodybuilding:
         return Colors.teal;
     }
+  }
+}
+
+class _AiWorkoutGenerateCard extends StatelessWidget {
+  const _AiWorkoutGenerateCard({required this.day});
+
+  final WorkupDay day;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final profile = context.read<AuthBloc>().state.profile;
+    final canRequest = profile != null;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+      child: BlocBuilder<AiWorkoutCubit, AiWorkoutState>(
+        builder: (context, state) {
+          final isRunning = state.status == AiWorkoutStatus.running;
+          final isError = state.status == AiWorkoutStatus.error;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.fitness_center,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Generar versión IA del entreno',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: (!canRequest || isRunning)
+                        ? null
+                        : () {
+                            final p = profile;
+                            final catalog = context
+                                .read<ExerciseCubit>()
+                                .state
+                                .exercises
+                                .map((e) => e.name)
+                                .toList();
+                            context.read<AiWorkoutCubit>().generate(
+                                  current: day,
+                                  profile: p,
+                                  catalog: catalog,
+                                );
+                          },
+                    child: isRunning
+                        ? const Text('Generando…')
+                        : const Text('Generar'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (!canRequest)
+                Text(
+                  'Inicia sesión para generar un entrenamiento alternativo.',
+                  style: theme.textTheme.bodyMedium,
+                )
+              else if (isRunning)
+                Row(
+                  children: [
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'La IA está creando una alternativa. El popup puede salir aunque cambies de pantalla.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                )
+              else if (isError)
+                Text(
+                  state.error ?? 'No se pudo generar el entrenamiento.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                )
+              else
+                Text(
+                  'Crea una alternativa con Warm Up y Bloques (A/B/C). Luego podrás aplicarla o mantener la actual.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DailyCoachCard extends StatefulWidget {
+  const _DailyCoachCard({required this.day});
+
+  final WorkupDay day;
+
+  @override
+  State<_DailyCoachCard> createState() => _DailyCoachCardState();
+}
+
+class _DailyCoachCardState extends State<_DailyCoachCard> {
+  String? _lastCacheKey;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authProfile = context.read<AuthBloc>().state.profile;
+    if (authProfile == null) return;
+
+    final now = DateTime.now();
+    final d = DateTime(now.year, now.month, now.day);
+    final cacheKey =
+        'daily_coach_v2:${authProfile.id}:${d.toIso8601String()}:${widget.day.dayNumber}';
+    if (_lastCacheKey == cacheKey) return;
+    _lastCacheKey = cacheKey;
+
+    // Si existe, se muestra automáticamente. Si no, queda en idle.
+    context.read<DailyCoachCubit>().loadCached(
+          profile: authProfile,
+          day: widget.day,
+          now: now,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.12)),
+      ),
+      child: BlocBuilder<DailyCoachCubit, DailyCoachState>(
+        builder: (context, state) {
+          final authProfile = context.read<AuthBloc>().state.profile;
+          final canRequest = authProfile != null;
+          final isGenerating =
+              state.status == DailyCoachStatus.downloadingModel ||
+                  state.status == DailyCoachStatus.generating;
+
+          Widget body;
+          switch (state.status) {
+            case DailyCoachStatus.downloadingModel:
+              body = Row(
+                children: [
+                  Icon(
+                    Icons.downloading_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Instalando IA local. El progreso se muestra en el indicador superior.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              );
+              break;
+            case DailyCoachStatus.generating:
+              body = Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Generando consejo del día…',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              );
+              break;
+            case DailyCoachStatus.ready:
+              final r = state.result;
+              if (r == null) {
+                body = Text(
+                  'Consejo no disponible.',
+                  style: theme.textTheme.bodyMedium,
+                );
+              } else {
+                body = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.insights,
+                            size: 18,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              r.headline,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Plan de ejecución',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...r.tips.map(
+                      (t) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '•',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(t, style: theme.textTheme.bodyMedium),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (r.caution.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondary
+                              .withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: theme.colorScheme.secondary
+                                .withValues(alpha: 0.20),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.health_and_safety_outlined,
+                                  size: 17,
+                                  color: theme.colorScheme.secondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Precaución técnica',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.secondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...r.caution.map(
+                              (c) => Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child:
+                                    Text(c, style: theme.textTheme.bodyMedium),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              }
+              break;
+            case DailyCoachStatus.error:
+              body = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Asistente del día',
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No se pudo generar el consejo. Puedes reintentar.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              );
+              break;
+            case DailyCoachStatus.idle:
+              body = Text(
+                'Asistente del día listo para generar tu consejo.',
+                style: theme.textTheme.bodyMedium,
+              );
+              break;
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome,
+                      size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Asistente del día',
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: !canRequest || isGenerating
+                        ? null
+                        : () {
+                            final p = authProfile;
+                            context.read<DailyCoachCubit>().loadOrGenerate(
+                                  profile: p,
+                                  day: widget.day,
+                                  now: DateTime.now(),
+                                  forceRefresh: true,
+                                );
+                          },
+                    child: Text(isGenerating ? 'Generando' : 'Generar'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              body,
+            ],
+          );
+        },
+      ),
+    );
   }
 }

@@ -46,6 +46,16 @@ import 'features/metrics/domain/repositories/metrics_repository.dart';
 import 'features/metrics/data/datasources/firestore_metrics_datasource.dart';
 import 'features/metrics/data/repositories/firestore_metrics_repository.dart';
 import 'features/metrics/application/metrics_cubit.dart';
+import 'features/ai_coach/infrastructure/ai_model_manager.dart';
+import 'features/ai_coach/application/daily_coach_cubit.dart';
+import 'features/ai_coach/application/daily_coach_state.dart';
+import 'features/ai_coach/infrastructure/local_llm_coach_service.dart';
+import 'features/ai_workout/application/ai_workout_cubit.dart';
+import 'features/ai_workout/presentation/ai_workout_apply_sheet.dart';
+import 'features/meals/application/daily_meal_plan_cubit.dart';
+
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,18 +67,15 @@ void main() async {
 
   final authService = AuthService();
   final authRepository = FirebaseAuthRepository(authService);
-  final workoutRepository =
-      LocalWorkoutRepository(LocalWorkoutDataSource());
-  final exerciseRepository =
-      LocalExerciseRepository(LocalExerciseDataSource());
-  final recipeRepository =
-      LocalRecipeRepository(LocalRecipeDataSource());
-  final progressRepository =
-      LocalProgressRepository(LocalProgressDataSource());
+  final workoutRepository = LocalWorkoutRepository(LocalWorkoutDataSource());
+  final exerciseRepository = LocalExerciseRepository(LocalExerciseDataSource());
+  final recipeRepository = LocalRecipeRepository(LocalRecipeDataSource());
+  final progressRepository = LocalProgressRepository(LocalProgressDataSource());
   final metricsDataSource = FirestoreMetricsDataSource();
   final metricsRepository = FirestoreMetricsRepository(metricsDataSource);
   final workoutFirestoreDatasource = WorkupsFirestoreDatasource();
-  final workoutFirestoreRepository = WorkupsFirestoreRepository(workoutFirestoreDatasource);
+  final workoutFirestoreRepository =
+      WorkupsFirestoreRepository(workoutFirestoreDatasource);
 
   runApp(
     MultiProvider(
@@ -80,7 +87,9 @@ void main() async {
         Provider<RecipeRepository>.value(value: recipeRepository),
         Provider<ProgressRepository>.value(value: progressRepository),
         Provider<MetricsRepository>.value(value: metricsRepository),
-        Provider<WorkupsFirestoreRepository>.value(value: workoutFirestoreRepository,),
+        Provider<WorkupsFirestoreRepository>.value(
+          value: workoutFirestoreRepository,
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -89,67 +98,166 @@ void main() async {
               ..add(const AuthStarted()),
           ),
           BlocProvider<WorkupsCubit>(
-            create: (_) => WorkupsCubit(workupsRepository: workoutFirestoreRepository)
-              ..loadWorkupDays(),
+            create: (_) =>
+                WorkupsCubit(workupsRepository: workoutFirestoreRepository)
+                  ..loadWorkupDays(),
           ),
           BlocProvider<OnboardingCubit>(
             create: (context) =>
                 OnboardingCubit(authRepository: authRepository),
           ),
           BlocProvider<WorkoutCubit>(
-            create: (_) =>
-                WorkoutCubit(workoutRepository: workoutRepository)
-                  ..loadWorkouts(),
+            create: (_) => WorkoutCubit(workoutRepository: workoutRepository)
+              ..loadWorkouts(),
           ),
           BlocProvider<ExerciseCubit>(
-            create: (_) =>
-                ExerciseCubit(exerciseRepository: exerciseRepository)
-                  ..loadInitial(),
+            create: (_) => ExerciseCubit(exerciseRepository: exerciseRepository)
+              ..loadInitial(),
           ),
           BlocProvider<RecipeCubit>(
             create: (_) =>
-                RecipeCubit(recipeRepository: recipeRepository)
-                  ..loadRecipes(),
+                RecipeCubit(recipeRepository: recipeRepository)..loadRecipes(),
           ),
           BlocProvider<ProgressCubit>(
-            create: (_) =>
-                ProgressCubit(progressRepository: progressRepository)
-                  ..loadProgress(),
+            create: (_) => ProgressCubit(progressRepository: progressRepository)
+              ..loadProgress(),
           ),
           BlocProvider<MetricsCubit>(
             create: (_) => MetricsCubit(repository: metricsRepository),
+          ),
+          BlocProvider<AiWorkoutCubit>(
+            create: (_) => AiWorkoutCubit(),
+          ),
+          BlocProvider<DailyMealPlanCubit>(
+            create: (_) => DailyMealPlanCubit(),
           ),
         ],
         child: const MyApp(),
       ),
     ),
   );
+
+  // Prefetch del modelo IA apenas arranca la app (no bloquea UI).
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    // No necesitamos await aquí; queremos dispararlo y listo.
+    AiModelManager.instance.ensureDownloaded().listen((_) {}, onError: (_) {});
+  });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String? _lastShownRequestId;
+  bool _sheetOpen = false;
+  String? _lastShownDailyCoachCacheKey;
+
+  @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<AuthBloc, AuthState>(
-          listenWhen: (prev, curr) =>
-              prev.authenticated != curr.authenticated,
-          listener: (context, state) {
-            routerNotifier.refresh();
-          },
-        ),
-        BlocListener<OnboardingCubit, OnboardingState>(
-          listenWhen: (prev, curr) =>
-              prev.status != curr.status ||
-              prev.currentStep != curr.currentStep,
-          listener: (context, state) {
-            routerNotifier.refresh();
-          },
-        ),
-      ],
-      child: MaterialApp.router(
+    return BlocProvider<DailyCoachCubit>(
+      create: (_) => DailyCoachCubit(service: LocalLlmCoachService()),
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<AuthBloc, AuthState>(
+            listenWhen: (prev, curr) =>
+                prev.authenticated != curr.authenticated ||
+                prev.profile?.id != curr.profile?.id,
+            listener: (context, state) {
+              routerNotifier.refresh();
+              final userId = state.profile?.id;
+              if (userId != null && userId.isNotEmpty) {
+                context.read<WorkupsCubit>().loadWorkupDaysForUser(userId);
+              }
+            },
+          ),
+          BlocListener<OnboardingCubit, OnboardingState>(
+            listenWhen: (prev, curr) =>
+                prev.status != curr.status ||
+                prev.currentStep != curr.currentStep,
+            listener: (context, state) {
+              routerNotifier.refresh();
+            },
+          ),
+          BlocListener<AiWorkoutCubit, AiWorkoutState>(
+            listenWhen: (prev, curr) =>
+                prev.status != curr.status || prev.requestId != curr.requestId,
+            listener: (context, state) async {
+              if (state.status != AiWorkoutStatus.ready) return;
+              if (_sheetOpen) return;
+              if (state.requestId == null ||
+                  state.requestId == _lastShownRequestId) {
+                return;
+              }
+              final profile = context.read<AuthBloc>().state.profile;
+              if (profile == null) return;
+              final current = state.current;
+              final proposed = state.proposed;
+              if (current == null || proposed == null) return;
+
+              _sheetOpen = true;
+              _lastShownRequestId = state.requestId;
+
+              final sheetContext = rootNavigatorKey.currentContext;
+              if (sheetContext == null) {
+                _sheetOpen = false;
+                return;
+              }
+
+              await showModalBottomSheet<bool>(
+                context: sheetContext,
+                isScrollControlled: true,
+                useSafeArea: true,
+                showDragHandle: false,
+                builder: (_) {
+                  return FractionallySizedBox(
+                    heightFactor: 0.9,
+                    child: AiWorkoutApplySheet(
+                      profile: profile,
+                      current: current,
+                      proposed: proposed,
+                    ),
+                  );
+                },
+              );
+
+              if (!mounted) return;
+              _sheetOpen = false;
+              context.read<AiWorkoutCubit>().reset();
+            },
+          ),
+          BlocListener<DailyCoachCubit, DailyCoachState>(
+            listenWhen: (prev, curr) =>
+                prev.status == DailyCoachStatus.generating &&
+                curr.status == DailyCoachStatus.ready,
+            listener: (context, state) {
+              if (state.cacheKey == null ||
+                  state.cacheKey == _lastShownDailyCoachCacheKey) {
+                return;
+              }
+              _lastShownDailyCoachCacheKey = state.cacheKey;
+
+              final currentPath =
+                  appRouter.routerDelegate.currentConfiguration.uri.path;
+              if (currentPath == '/workup-day-detail') return;
+
+              rootScaffoldMessengerKey.currentState
+                ?..hideCurrentSnackBar()
+                ..showSnackBar(
+                  const SnackBar(
+                    content: Text('Asistente del día listo'),
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 4),
+                  ),
+                );
+            },
+          ),
+        ],
+        child: MaterialApp.router(
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
           title: 'IA Entrenar',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme(),
@@ -157,6 +265,7 @@ class MyApp extends StatelessWidget {
           themeMode: ThemeMode.dark,
           routerConfig: appRouter,
         ),
+      ),
     );
   }
 }
