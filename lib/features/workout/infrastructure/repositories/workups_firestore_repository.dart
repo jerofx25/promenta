@@ -10,4 +10,8 @@ class WorkupsFirestoreRepository {
   Future<List<WorkupDay>> getWorkupDays() async {
     return _datasource.getWorkupDays();
   }
+
+  Future<List<WorkupDay>> getWorkupDaysForUser(String userId) async {
+    return _datasource.getWorkupDaysMergedWithOverrides(userId: userId);
+  }
 }

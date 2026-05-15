@@ -181,26 +181,52 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
                           color: theme.colorScheme.primary.withOpacity(0.2),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: recipe.nutritionFacts!.entries.map((entry) {
-                          return Column(
-                            children: [
-                              Text(
-                                entry.value,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final entries = recipe.nutritionFacts!.entries;
+                          final itemWidth = entries.length <= 2
+                              ? (constraints.maxWidth - 12) / 2
+                              : (constraints.maxWidth - 24) / 3;
+
+                          return Wrap(
+                            alignment: WrapAlignment.spaceAround,
+                            runAlignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: entries.map((entry) {
+                              return SizedBox(
+                                width: itemWidth.clamp(76.0, 120.0),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      entry.value,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                        fontSize:
+                                            (theme.textTheme.titleMedium
+                                                        ?.fontSize ??
+                                                    16) +
+                                                0.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _wrapLongTokens(entry.key),
+                                      style: theme.textTheme.bodySmall,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                entry.key,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        },
                       ),
                     ),
                   ],
@@ -318,8 +344,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  ingredients[index],
-                  style: theme.textTheme.bodyMedium,
+                  _wrapLongTokens(ingredients[index]),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: (theme.textTheme.bodyMedium?.fontSize ?? 12),
+                  ),
+                  softWrap: true,
                 ),
               ),
             ],
@@ -368,5 +397,25 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
         );
       },
     );
+  }
+
+  String _wrapLongTokens(String text) {
+    const softBreak = '\u200B';
+    return text
+        .split(' ')
+        .map((token) {
+          if (token.length <= 18) return token;
+          final buffer = StringBuffer();
+          for (var i = 0; i < token.length; i++) {
+            buffer.write(token[i]);
+            final shouldBreak = (i + 1) % 12 == 0 && i != token.length - 1;
+            if (shouldBreak) buffer.write(softBreak);
+          }
+          return buffer.toString();
+        })
+        .join(' ')
+        .replaceAll(':', ':$softBreak')
+        .replaceAll('/', '/$softBreak')
+        .replaceAll('-', '-$softBreak');
   }
 }

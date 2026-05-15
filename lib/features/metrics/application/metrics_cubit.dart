@@ -1,7 +1,6 @@
 import 'package:bloc/bloc.dart';
 
 import '../domain/entities/capacity_type.dart';
-import '../domain/entities/fitness_metric_record.dart';
 import '../domain/entities/metric_unit.dart';
 import '../domain/repositories/metrics_repository.dart';
 import '../domain/usecases/calculate_rm_percentages.dart';
@@ -34,7 +33,7 @@ class MetricsCubit extends Cubit<MetricsState> {
     try {
       final list = await _getUserMetrics(userId, limit: 200);
       emit(state.copyWith(metrics: list, isLoading: false, error: null));
-    } catch (e, st) {
+    } catch (e) {
       emit(state.copyWith(
         isLoading: false,
         error: e.toString(),

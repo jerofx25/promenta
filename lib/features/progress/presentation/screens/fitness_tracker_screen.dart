@@ -11,15 +11,15 @@ import 'package:IAEntrenar/features/metrics/application/metrics_cubit.dart';
 import 'package:IAEntrenar/features/metrics/application/metrics_state.dart';
 import 'package:IAEntrenar/features/metrics/domain/entities/capacity_type.dart';
 import 'package:IAEntrenar/features/metrics/domain/entities/fitness_metric_record.dart';
-import 'package:IAEntrenar/widgets/stacked_column_chart.dart';
 import 'package:IAEntrenar/features/progress/application/progress_cubit.dart';
 import 'package:IAEntrenar/services/apple_health_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FitnessTrackerScreen extends StatefulWidget {
   const FitnessTrackerScreen({super.key});
 
   @override
-  _FitnessTrackerScreenState createState() => _FitnessTrackerScreenState();
+  State<FitnessTrackerScreen> createState() => _FitnessTrackerScreenState();
 }
 
 class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
@@ -52,16 +52,10 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
   bool _showStrengthData = true;
   bool _showFlexibilityData = true;
 
-  // Health metrics
-  final Map<String, double> _stressLevels = {
-    'Lun': 35,
-    'Mar': 42,
-    'Mié': 38,
-    'Jue': 25,
-    'Vie': 30,
-    'Sáb': 20,
-    'Dom': 15,
-  };
+  // Health metrics (calculadas con Apple Health cuando hay datos)
+  double? _computedStress; // 0-100
+  double? _computedRecovery; // 0-100
+  bool _stressRecoveryIsExample = true;
 
   final Map<String, int> _sleepHours = {
     'Lun': 7,
@@ -73,8 +67,6 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     'Dom': 8,
   };
 
-  final double _recoveryScore = 79;
-
   final AppleHealthService _appleHealthService = AppleHealthService();
   AppleHealthData? _appleHealthData;
   bool _appleHealthLoading = false;
@@ -84,13 +76,108 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     setState(() => _appleHealthLoading = true);
     try {
       final data = await _appleHealthService.fetchTodayData();
-      if (mounted) setState(() {
+      if (!mounted) return;
+
+      final computed = await _computeStressAndRecovery(data);
+      setState(() {
         _appleHealthData = data;
+        _computedStress = computed?.stress;
+        _computedRecovery = computed?.recovery;
+        _stressRecoveryIsExample = computed?.isExample ?? true;
         _appleHealthLoading = false;
       });
     } catch (_) {
       if (mounted) setState(() => _appleHealthLoading = false);
     }
+  }
+
+  /// Cálculo KISS pero consistente:
+  /// - Usa sueño (última noche), HRV y carga de actividad (min/cal/steps).
+  /// - Normaliza relativo a una baseline personal (EWMA) guardada localmente.
+  Future<({double stress, double recovery, bool isExample})?>
+      _computeStressAndRecovery(
+    AppleHealthData? data,
+  ) async {
+    if (data == null) return null;
+
+    final sleep = data.sleepLastNightHours;
+    final hrv = data.hrvMs;
+    // Si falta sueño o HRV, devolvemos null y la UI lo marcará como ejemplo/0.
+    if (sleep == null || hrv == null || sleep <= 0 || hrv <= 0) return null;
+
+    final prefs = await SharedPreferences.getInstance();
+    const alpha = 0.12; // EWMA suave (más estable)
+
+    final prevBaselineHrv = prefs.getDouble('baseline_hrv_ms');
+    final prevBaselineSleep = prefs.getDouble('baseline_sleep_h');
+
+    final baselineHrv = _ewmaUpdate(
+      prefs: prefs,
+      key: 'baseline_hrv_ms',
+      value: hrv,
+      alpha: alpha,
+    );
+    _ewmaUpdate(
+      prefs: prefs,
+      key: 'baseline_sleep_h',
+      value: sleep,
+      alpha: alpha,
+    );
+
+    final minutes = (data.exerciseMinutes ?? 0).toDouble();
+    final calories = (data.activeCalories ?? 0).toDouble();
+    final steps = (data.steps ?? 0).toDouble();
+
+    final sleepScore = _clamp01(_mapLinear(sleep, 5.0, 8.0)); // 5-8h
+    // HRV: ratio vs baseline (capado). Si estás por encima de tu baseline, mejor.
+    final hrvRatio = baselineHrv <= 0 ? 0.0 : (hrv / baselineHrv);
+    final hrvScore =
+        _clamp01((hrvRatio - 0.70) / (1.20 - 0.70)); // 0.70x..1.20x
+
+    // Carga del día: 0..1 (más carga => menos recovery, más stress)
+    final loadMinutes = _clamp01(minutes / 60.0);
+    final loadCalories = _clamp01(calories / 600.0);
+    final loadSteps = _clamp01(steps / 10000.0);
+    final load =
+        (0.45 * loadMinutes) + (0.35 * loadCalories) + (0.20 * loadSteps);
+
+    // Recovery: sueño + HRV pesan más. Load penaliza ligeramente.
+    final recovery = (100.0 *
+            ((0.48 * sleepScore) + (0.42 * hrvScore) + (0.10 * (1.0 - load))))
+        .clamp(0.0, 100.0);
+
+    // Stress: inverso de sueño/HRV + carga.
+    final stress = (100.0 *
+            ((0.50 * (1.0 - sleepScore)) +
+                (0.35 * (1.0 - hrvScore)) +
+                (0.15 * load)))
+        .clamp(0.0, 100.0);
+
+    // Ejemplo si baseline aún no está estable (primeras sesiones).
+    // Si aún no teníamos baseline (primeras sesiones), lo consideramos ejemplo.
+    final isExample = prevBaselineHrv == null || prevBaselineSleep == null;
+    return (stress: stress, recovery: recovery, isExample: isExample);
+  }
+
+  double _ewmaUpdate({
+    required SharedPreferences prefs,
+    required String key,
+    required double value,
+    required double alpha,
+  }) {
+    final prev = prefs.getDouble(key);
+    final next = prev == null ? value : (alpha * value + (1 - alpha) * prev);
+    // Fire-and-forget: persist baseline.
+    prefs.setDouble(key, next);
+    return next;
+  }
+
+  static double _clamp01(double v) => v.clamp(0.0, 1.0);
+
+  /// Mapea linealmente x dentro [min..max] a [0..1].
+  static double _mapLinear(double x, double min, double max) {
+    if (max <= min) return 0.0;
+    return (x - min) / (max - min);
   }
 
   @override
@@ -145,7 +232,6 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
 
   @override
   Widget build(BuildContext context) {
-
     final double securityBotton = MediaQuery.of(context).padding.bottom + 65;
     final double securityTop = MediaQuery.of(context).padding.top + 15;
 
@@ -182,21 +268,28 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                             )
                           else
                             Material(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                               child: InkWell(
                                 onTap: _loadAppleHealth,
                                 borderRadius: BorderRadius.circular(20),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.health_and_safety, size: 18, color: theme.colorScheme.primary),
+                                      Icon(Icons.health_and_safety,
+                                          size: 18,
+                                          color: theme.colorScheme.primary),
                                       const SizedBox(width: 4),
                                       Text(
-                                        _appleHealthData != null ? 'Salud' : 'Conectar Salud',
-                                        style: theme.textTheme.labelSmall?.copyWith(
+                                        _appleHealthData != null
+                                            ? 'Salud'
+                                            : 'Conectar Salud',
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
                                           color: theme.colorScheme.primary,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -258,9 +351,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                   heroTag: 'settings',
                   backgroundColor: theme.colorScheme.primary,
                   child: const Icon(Icons.settings),
-                  onPressed: () {
-                    // Implementar navegación a configuración
-                  },
+                  onPressed: () => context.pushNamed('settings'),
                 ),
               ),
               _buildAnimatedButton(
@@ -344,9 +435,8 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return (current / target).clamp(0.0, 1.0);
   }
 
-  static String _formatWithCommas(int n) =>
-      n.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+  static String _formatWithCommas(int n) => n.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
 
   Widget _buildActivityRings(ThemeData theme) {
     final progressState = context.watch<ProgressCubit>().state;
@@ -355,9 +445,8 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     final currentCalories = _appleHealthData?.activeCalories ??
         snapshot?.today.caloriesBurned ??
         _currentCalories;
-    final currentSteps = _appleHealthData?.steps ??
-        snapshot?.today.steps ??
-        _currentSteps;
+    final currentSteps =
+        _appleHealthData?.steps ?? snapshot?.today.steps ?? _currentSteps;
     final currentActiveMinutes = _appleHealthData?.exerciseMinutes ??
         snapshot?.today.activeMinutes ??
         _activeMinutes;
@@ -394,8 +483,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                     builder: (context, child) {
                       return CustomPaint(
                         painter: ActivityRingsPainter(
-                          moveProgress:
-                              moveProgress * _contentAnimation.value,
+                          moveProgress: moveProgress * _contentAnimation.value,
                           exerciseProgress:
                               exerciseProgress * _contentAnimation.value,
                           standProgress:
@@ -431,7 +519,8 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                       _buildActivityStat(
                         icon: Icons.timer,
                         label: 'EJERCICIO',
-                        value: '$currentActiveMinutes / $_targetActiveMinutes min',
+                        value:
+                            '$currentActiveMinutes / $_targetActiveMinutes min',
                         color: AppTheme.exerciseRingColor,
                         progress: exerciseProgress,
                         unit: '',
@@ -570,16 +659,14 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     final minutes = _appleHealthData?.exerciseMinutes ??
         snapshot?.today.activeMinutes ??
         _activeMinutes;
-    final steps = _appleHealthData?.steps ??
-        snapshot?.today.steps ??
-        _currentSteps;
+    final steps =
+        _appleHealthData?.steps ?? snapshot?.today.steps ?? _currentSteps;
     final calories = _appleHealthData?.activeCalories ??
         snapshot?.today.caloriesBurned ??
         _currentCalories;
 
-    String formatNumber(int n) =>
-        n.toString().replaceAllMapped(
-            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+    String formatNumber(int n) => n.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -827,11 +914,19 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     required bool showStrength,
     required bool showFlexibility,
   }) {
-    const segmentLabels = ['0-4h', '4-8h', '8-12h', '12-16h', '16-20h', '20-24h'];
+    const segmentLabels = [
+      '0-4h',
+      '4-8h',
+      '8-12h',
+      '12-16h',
+      '16-20h',
+      '20-24h'
+    ];
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final segmentSums = List.generate(6, (_) => [0.0, 0.0, 0.0]); // cardio, strength, flexibility
+    final segmentSums = List.generate(
+        6, (_) => [0.0, 0.0, 0.0]); // cardio, strength, flexibility
 
     for (final m in metrics) {
       final d = m.recordedAt;
@@ -863,9 +958,12 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
 
     return List.generate(6, (i) {
       final raw = segmentSums[i];
-      final cardio = showCardio ? (raw[0] / maxCardio * 40) * animationValue : 0.0;
-      final strength = showStrength ? (raw[1] / maxStrength * 40) * animationValue : 0.0;
-      final flexibility = showFlexibility ? (raw[2] / maxFlex * 40) * animationValue : 0.0;
+      final cardio =
+          showCardio ? (raw[0] / maxCardio * 40) * animationValue : 0.0;
+      final strength =
+          showStrength ? (raw[1] / maxStrength * 40) * animationValue : 0.0;
+      final flexibility =
+          showFlexibility ? (raw[2] / maxFlex * 40) * animationValue : 0.0;
       return StackedWorkoutData(
         xLabel: segmentLabels[i],
         values: [cardio, strength, flexibility],
@@ -888,11 +986,16 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
 
     final dailySums = <DateTime, List<double>>{};
     for (final d in days) {
-      dailySums[DateTime(d.year, d.month, d.day)] = [0.0, 0.0, 0.0]; // cardio, strength, flexibility
+      dailySums[DateTime(d.year, d.month, d.day)] = [
+        0.0,
+        0.0,
+        0.0
+      ]; // cardio, strength, flexibility
     }
 
     for (final m in metrics) {
-      final day = DateTime(m.recordedAt.year, m.recordedAt.month, m.recordedAt.day);
+      final day =
+          DateTime(m.recordedAt.year, m.recordedAt.month, m.recordedAt.day);
       final bucket = dailySums[day];
       if (bucket == null) continue;
       switch (m.capacityType) {
@@ -920,9 +1023,12 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return days.map((d) {
       final key = DateTime(d.year, d.month, d.day);
       final raw = dailySums[key]!;
-      final cardio = showCardio ? (raw[0] / maxCardio * 40) * animationValue : 0.0;
-      final strength = showStrength ? (raw[1] / maxStrength * 40) * animationValue : 0.0;
-      final flexibility = showFlexibility ? (raw[2] / maxFlex * 40) * animationValue : 0.0;
+      final cardio =
+          showCardio ? (raw[0] / maxCardio * 40) * animationValue : 0.0;
+      final strength =
+          showStrength ? (raw[1] / maxStrength * 40) * animationValue : 0.0;
+      final flexibility =
+          showFlexibility ? (raw[2] / maxFlex * 40) * animationValue : 0.0;
       return StackedWorkoutData(
         xLabel: dayLabels[d.weekday - 1],
         values: [cardio, strength, flexibility],
@@ -941,10 +1047,13 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
         final isDay = _selectedTimeFilter == 'Día';
         final isWeek = _selectedTimeFilter == 'Semana';
 
-        final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+        final today = DateTime(
+            DateTime.now().year, DateTime.now().month, DateTime.now().day);
         final hasMetricsToday = hasMetrics &&
             metricsState.metrics.any((m) =>
-                DateTime(m.recordedAt.year, m.recordedAt.month, m.recordedAt.day) == today);
+                DateTime(
+                    m.recordedAt.year, m.recordedAt.month, m.recordedAt.day) ==
+                today);
 
         if (isDay && hasMetricsToday) {
           workoutData = _buildDailyBreakdownFromMetrics(
@@ -1029,7 +1138,8 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                             Icon(
                               Icons.bar_chart,
                               size: 48,
-                              color: theme.colorScheme.onSurface.withOpacity(0.3),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.3),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -1038,7 +1148,8 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                                   : 'No hay datos de métricas en esta sección',
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.7),
                               ),
                             ),
                           ],
@@ -1077,19 +1188,26 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1,
-          children: [
-            _buildStressLevelCard(theme),
-            _buildRecoveryScoreCard(theme),
-            _buildSleepQualityCard(theme),
-            _buildHRVCard(theme),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final childAspectRatio = width < 380 ? 0.82 : 1.0;
+
+            return GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: childAspectRatio,
+              children: [
+                _buildStressLevelCard(theme),
+                _buildRecoveryScoreCard(theme),
+                _buildSleepQualityCard(theme),
+                _buildHRVCard(theme),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 24),
         _buildFitnessRadarChart(theme),
@@ -1135,7 +1253,13 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
             builder: (context, metricsState) {
               final data = metricsState.radarData.isNotEmpty
                   ? metricsState.radarData
-                  : FitnessRadarData.getSampleFitnessData();
+                  : const {
+                      'Fuerza': 0.0,
+                      'Resistencia': 0.0,
+                      'Velocidad': 0.0,
+                      'Movilidad': 0.0,
+                      'Cardio': 0.0,
+                    };
               return AnimatedBuilder(
                 animation: _contentAnimation,
                 builder: (context, _) {
@@ -1162,6 +1286,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
   }
 
   Widget _buildStressLevelCard(ThemeData theme) {
+    final baseStress = (_computedStress ?? 0.0).clamp(0.0, 100.0);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1206,26 +1331,37 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
             child: AnimatedBuilder(
               animation: _contentAnimation,
               builder: (context, child) {
-                final stressValue =
-                    _stressLevels.values.last * _contentAnimation.value;
+                final stressValue = baseStress * _contentAnimation.value;
                 final stressColor = stressValue > 35
                     ? AppTheme.moveRingColor
                     : stressValue > 20
                         ? Colors.orange
                         : AppTheme.exerciseRingColor;
-                return Text(
-                  stressValue.toInt().toString(),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: stressColor,
-                  ),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      stressValue.toInt().toString(),
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: stressColor,
+                      ),
+                    ),
+                    if (_stressRecoveryIsExample)
+                      Text(
+                        '(Ejemplo)',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
           ),
           const Spacer(),
           Text(
-            stressDescription(_stressLevels.values.last),
+            stressDescription(baseStress),
             style: theme.textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
@@ -1241,6 +1377,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
   }
 
   Widget _buildRecoveryScoreCard(ThemeData theme) {
+    final baseRecovery = (_computedRecovery ?? 0.0).clamp(0.0, 100.0);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1272,10 +1409,14 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                'Recuperación',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Recuperación',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -1286,43 +1427,62 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
               animation: _contentAnimation,
               builder: (context, child) {
                 final recoveryScoreValue =
-                    _recoveryScore * _contentAnimation.value;
+                    baseRecovery * _contentAnimation.value;
                 final recoveryColor = recoveryScoreValue > 70
                     ? AppTheme.exerciseRingColor
                     : recoveryScoreValue > 50
                         ? Colors.orange
                         : AppTheme.moveRingColor;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      recoveryScoreValue.toInt().toString(),
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: recoveryColor,
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            recoveryScoreValue.toInt().toString(),
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: recoveryColor,
+                            ),
+                          ),
+                          if (_stressRecoveryIsExample)
+                            Text(
+                              '(Ejemplo)',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.5),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6.0),
-                      child: Text(
-                        '/100',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color:
-                              theme.colorScheme.onSurface.withOpacity(0.6),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Text(
+                          '/100',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
           ),
           const Spacer(),
-          Text(
-            recoveryDescription(_recoveryScore),
-            style: theme.textTheme.bodySmall,
-            textAlign: TextAlign.center,
+          Center(
+            child: Text(
+              recoveryDescription(baseRecovery),
+              style: theme.textTheme.bodySmall,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -1376,12 +1536,12 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
             ],
           ),
           const Spacer(),
-          AnimatedBuilder(
-            animation: _contentAnimation,
-            builder: (context, child) {
-              return SizedBox(
-                height: 65,
-                child: BarChart(
+          Expanded(
+            flex: 3,
+            child: AnimatedBuilder(
+              animation: _contentAnimation,
+              builder: (context, child) {
+                return BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceBetween,
                     maxY: 10,
@@ -1411,7 +1571,7 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                             }
                             return const SizedBox();
                           },
-                          reservedSize: 20,
+                          reservedSize: 16,
                         ),
                       ),
                     ),
@@ -1436,9 +1596,9 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                     }).toList(),
                     gridData: const FlGridData(show: false),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
           const Spacer(),
           Center(
@@ -1455,26 +1615,33 @@ class _FitnessTrackerScreenState extends State<FitnessTrackerScreen>
                       padding: const EdgeInsets.only(bottom: 4.0),
                       child: Text(
                         'Última noche',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7),
                         ),
                       ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          sleepDisplay,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: getSleepQualityColor(sleepHours),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            sleepDisplay,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: getSleepQualityColor(sleepHours),
+                            ),
                           ),
-                        ),
-                        Text(
-                          ' h',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
+                          Text(
+                            ' h',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 );
@@ -1630,23 +1797,24 @@ class ActivityRingsPainter extends CustomPainter {
     const startAngle = -math.pi / 2;
 
     // Fondos (track)
-    _drawRing(canvas, center, radius1, strokeWidth,
-        moveColor.withOpacity(0.2), 1.0);
+    _drawRing(
+        canvas, center, radius1, strokeWidth, moveColor.withOpacity(0.2), 1.0);
     _drawRing(canvas, center, radius2, strokeWidth,
         exerciseColor.withOpacity(0.2), 1.0);
-    _drawRing(canvas, center, radius3, strokeWidth,
-        standColor.withOpacity(0.2), 1.0);
+    _drawRing(
+        canvas, center, radius3, strokeWidth, standColor.withOpacity(0.2), 1.0);
 
     // Anillo 1: glow sutil + barra con gradiente + cap
-    _drawRingGlow(canvas, center, radius1, strokeWidth, moveColor, moveProgress);
+    _drawRingGlow(
+        canvas, center, radius1, strokeWidth, moveColor, moveProgress);
     _drawRingGradient(canvas, center, radius1, strokeWidth, moveColor,
         startAngle, moveProgress);
     if (moveProgress > 0 && moveProgress < 1.0) {
       _drawCap(canvas, center, radius1, strokeWidth, moveColor, moveProgress);
     }
 
-    _drawRingGlow(canvas, center, radius2, strokeWidth, exerciseColor,
-        exerciseProgress);
+    _drawRingGlow(
+        canvas, center, radius2, strokeWidth, exerciseColor, exerciseProgress);
     _drawRingGradient(canvas, center, radius2, strokeWidth, exerciseColor,
         startAngle, exerciseProgress);
     if (exerciseProgress > 0 && exerciseProgress < 1.0) {
@@ -1654,8 +1822,8 @@ class ActivityRingsPainter extends CustomPainter {
           exerciseProgress);
     }
 
-    _drawRingGlow(canvas, center, radius3, strokeWidth, standColor,
-        standProgress);
+    _drawRingGlow(
+        canvas, center, radius3, strokeWidth, standColor, standProgress);
     _drawRingGradient(canvas, center, radius3, strokeWidth, standColor,
         startAngle, standProgress);
     if (standProgress > 0 && standProgress < 1.0) {
@@ -1663,8 +1831,8 @@ class ActivityRingsPainter extends CustomPainter {
     }
   }
 
-  void _drawRing(Canvas canvas, Offset center, double radius, double strokeWidth,
-      Color color, double progress) {
+  void _drawRing(Canvas canvas, Offset center, double radius,
+      double strokeWidth, Color color, double progress) {
     final rect = Rect.fromCircle(center: center, radius: radius);
     const start = -math.pi / 2;
     final sweep = 2 * math.pi * progress;
@@ -1695,8 +1863,7 @@ class ActivityRingsPainter extends CustomPainter {
     if (progress <= 0) return;
     final rect = Rect.fromCircle(center: center, radius: radius * 1.5);
     final sweep = 2 * math.pi * progress;
-    final highlightColor =
-        Color.lerp(color, Colors.white, _gradientHighlight)!;
+    final highlightColor = Color.lerp(color, Colors.white, _gradientHighlight)!;
     final shader = SweepGradient(
       center: Alignment.center,
       startAngle: startAngle,
@@ -1725,7 +1892,9 @@ class ActivityRingsPainter extends CustomPainter {
       center.dx + radius * math.cos(angle),
       center.dy + radius * math.sin(angle),
     );
-    final paint = Paint()..color = color..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
     canvas.drawCircle(capCenter, capRadius, paint);
   }
 

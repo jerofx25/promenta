@@ -19,6 +19,7 @@ import 'package:IAEntrenar/features/onboarding/presentation/screens/training_goa
 import 'package:IAEntrenar/features/onboarding/presentation/screens/dietary_preferences_screen.dart';
 import 'package:IAEntrenar/features/onboarding/presentation/screens/profile_photo_screen.dart';
 import 'package:IAEntrenar/features/timer/presentation/screens/timer_screen.dart';
+import 'package:IAEntrenar/features/settings/presentation/screens/settings_screen.dart';
 import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_list_screen.dart';
 import 'package:IAEntrenar/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:IAEntrenar/features/workout/presentation/screens/workout_detail_screen.dart';
@@ -28,7 +29,10 @@ import 'package:IAEntrenar/features/progress/presentation/screens/fitness_tracke
 import 'router_notifier.dart';
 import 'route_logging_observer.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final GoRouter appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/',
   refreshListenable: routerNotifier,
   observers: [RouteLoggingObserver()],
@@ -53,7 +57,8 @@ final GoRouter appRouter = GoRouter(
         return '/';
       }
       // Permitir rutas de onboarding o forgot-password para no bloquear la navegación manual
-      if (currentLoc == '/forgot-password' || currentLoc.startsWith('/onboarding')) {
+      if (currentLoc == '/forgot-password' ||
+          currentLoc.startsWith('/onboarding')) {
         return null; // Dejar que pase a la ruta solicitada
       }
       return '/'; // Si intenta ir a /home u otra ruta protegida, forzar loading
@@ -201,6 +206,16 @@ final GoRouter appRouter = GoRouter(
       name: 'timer',
       pageBuilder: (context, state) => const CustomTransitionPage(
         child: TimerScreen(),
+        transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+
+    /// Configuración
+    GoRoute(
+      path: '/settings',
+      name: 'settings',
+      pageBuilder: (context, state) => const CustomTransitionPage(
+        child: SettingsScreen(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),
